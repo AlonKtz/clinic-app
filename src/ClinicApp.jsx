@@ -65,30 +65,48 @@ export default function ClinicApp() {
 
   return (
     <div style={{ direction: 'rtl', minHeight: '100vh', background: colors.bg, fontFamily: 'Segoe UI, Arial, sans-serif' }}>
+
       {/* Header */}
       <header style={{
-        background: `linear-gradient(135deg, ${colors.primary}, ${colors.primaryLight})`,
+        background: `linear-gradient(135deg, #AA0000, ${colors.primary}, ${colors.primaryLight})`,
         color: '#fff',
-        padding: '1rem 1.5rem',
-        boxShadow: '0 2px 12px rgba(30,64,175,0.25)',
+        padding: '0.85rem 1.5rem',
+        boxShadow: '0 2px 14px rgba(180,0,0,0.35)',
       }}>
         <div style={{ maxWidth: '960px', margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <div>
-            <h1 style={{ margin: 0, fontSize: '1.4rem', fontWeight: 700 }}>🏥 מרפאה — מערכת ניהול תורים</h1>
-            <p style={{ margin: '0.2rem 0 0', opacity: 0.85, fontSize: '0.82rem' }}>ניהול רופאים, מטופלים ותורים</p>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+            {/* Logo mark */}
+            <div style={{
+              width: '44px', height: '44px', borderRadius: '10px',
+              background: 'rgba(255,255,255,0.2)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontSize: '1.5rem', flexShrink: 0,
+            }}>🏥</div>
+            <div>
+              <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.5rem' }}>
+                <h1 style={{ margin: 0, fontSize: '1.6rem', fontWeight: 800, letterSpacing: '-0.5px' }}>QFlow</h1>
+                <span style={{ opacity: 0.75, fontSize: '0.8rem', fontWeight: 400 }}>מערכת ניהול תורים</span>
+              </div>
+              <p style={{ margin: 0, opacity: 0.7, fontSize: '0.73rem', letterSpacing: '0.02em' }}>
+                By Alon &amp; Afik
+              </p>
+            </div>
           </div>
-          <div style={{ display: 'flex', gap: '0.75rem' }}>
+
+          {/* Stats */}
+          <div style={{ display: 'flex', gap: '0.6rem' }}>
             {tabs.filter(t => t.count !== null).map(t => (
               <div key={t.id} style={{
                 background: 'rgba(255,255,255,0.15)',
-                borderRadius: '8px',
-                padding: '0.4rem 0.75rem',
-                fontSize: '0.8rem',
+                borderRadius: '10px',
+                padding: '0.35rem 0.7rem',
+                fontSize: '0.78rem',
                 fontWeight: 600,
                 textAlign: 'center',
+                minWidth: '44px',
               }}>
-                <div style={{ fontSize: '1.1rem' }}>{t.icon}</div>
-                <div>{t.count}</div>
+                <div style={{ fontSize: '1rem' }}>{t.icon}</div>
+                <div style={{ fontSize: '1rem', fontWeight: 700 }}>{t.count}</div>
               </div>
             ))}
           </div>
@@ -96,33 +114,37 @@ export default function ClinicApp() {
       </header>
 
       {/* Tab Bar */}
-      <nav style={{ background: colors.white, borderBottom: `1px solid ${colors.border}`, boxShadow: '0 1px 4px rgba(0,0,0,0.05)' }}>
+      <nav style={{
+        background: colors.white,
+        borderBottom: `2px solid ${colors.border}`,
+        boxShadow: '0 1px 4px rgba(0,0,0,0.04)',
+      }}>
         <div style={{ maxWidth: '960px', margin: '0 auto', display: 'flex' }}>
           {tabs.map(t => (
             <button
               key={t.id}
               onClick={() => setTab(t.id)}
               style={{
-                padding: '0.85rem 1.5rem',
+                padding: '0.85rem 1.4rem',
                 border: 'none',
                 background: 'none',
                 cursor: 'pointer',
                 fontWeight: tab === t.id ? 700 : 500,
                 color: tab === t.id ? colors.primary : colors.textMuted,
                 borderBottom: `3px solid ${tab === t.id ? colors.primary : 'transparent'}`,
-                fontSize: '0.9rem',
+                fontSize: '0.88rem',
                 display: 'flex',
                 alignItems: 'center',
                 gap: '0.4rem',
-                transition: 'all 0.15s',
+                transition: 'color 0.15s, border-color 0.15s',
               }}
             >
               <span>{t.icon}</span>
               <span>{t.label}</span>
               {t.count !== null && (
                 <span style={{
-                  background: tab === t.id ? colors.primaryBg : '#f1f5f9',
-                  color: tab === t.id ? colors.primary : '#94a3b8',
+                  background: tab === t.id ? colors.primaryBg : '#f5f0f0',
+                  color: tab === t.id ? colors.primary : '#b08080',
                   borderRadius: '999px',
                   padding: '0.1rem 0.5rem',
                   fontSize: '0.72rem',
@@ -164,8 +186,17 @@ export default function ClinicApp() {
         {tab === 'erd' && <ERDView />}
       </main>
 
-      <footer style={{ textAlign: 'center', padding: '1.5rem', color: '#94a3b8', fontSize: '0.78rem', borderTop: `1px solid ${colors.border}`, marginTop: '2rem' }}>
-        מערכת ניהול תורים לקליניקה — פרויקט אקדמי
+      <footer style={{
+        textAlign: 'center',
+        padding: '1.25rem',
+        color: '#b08080',
+        fontSize: '0.78rem',
+        borderTop: `1px solid ${colors.border}`,
+        marginTop: '2rem',
+        background: colors.white,
+      }}>
+        <span style={{ fontWeight: 700, color: colors.primary }}>QFlow</span>
+        {' '}— מערכת ניהול תורים לקליניקה &nbsp;·&nbsp; By Alon &amp; Afik
       </footer>
     </div>
   );

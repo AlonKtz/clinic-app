@@ -1,16 +1,16 @@
 import { colors } from './styles';
 
 const C = {
-  entity: '#1e40af',
-  entityBg: '#dbeafe',
+  entity: '#AA0000',
+  entityBg: '#FFE8E8',
   relation: '#7c3aed',
   relationBg: '#ede9fe',
   attr: '#0f766e',
   attrBg: '#f0fdfa',
-  pk: '#dc2626',
-  pkBg: '#fef2f2',
-  line: '#94a3b8',
-  mainLine: '#475569',
+  pk: '#CC0000',
+  pkBg: '#fff0f0',
+  line: '#c4a0a0',
+  mainLine: '#9B2020',
 };
 
 const FONT = 'Segoe UI, Arial, sans-serif';
