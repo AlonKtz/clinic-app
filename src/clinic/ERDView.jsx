@@ -23,72 +23,97 @@ const RELATED = {
   recv:        ['doctor', 'appointment'],
   book:        ['patient', 'appointment'],
 };
-
-/** true  → element `node` should be visually highlighted */
-const hl = (node, active) =>
-  !!active && (active === node || !!RELATED[active]?.includes(node));
-
-/** true  → only when this exact element is selected/hovered */
+const hl       = (node, active) => !!active && (active === node || !!RELATED[active]?.includes(node));
 const directly = (node, active) => active === node;
 
-/* ── Info data for the panel ─────────────────────────────────── */
+/* ── Geometry helpers ───────────────────────────────────────────── */
+
+/** point at fraction t from `a` to `b` */
+const lerp = (a, b, t) => ({
+  x: Math.round(a.x + t * (b.x - a.x)),
+  y: Math.round(a.y + t * (b.y - a.y)),
+});
+
+/** point on segment `from→to` at fraction t, offset perpendicular by `d` */
+function offsetOn(from, to, t, d) {
+  const x = from.x + t * (to.x - from.x);
+  const y = from.y + t * (to.y - from.y);
+  const dx = to.x - from.x, dy = to.y - from.y;
+  const len = Math.hypot(dx, dy) || 1;
+  // perpendicular CCW = (-dy, dx)/len ; positive d → "left" of direction
+  return {
+    x: Math.round(x + (-dy / len) * d),
+    y: Math.round(y + ( dx / len) * d),
+    anchorX: Math.round(x),
+    anchorY: Math.round(y),
+  };
+}
+
+/* ── Info data ──────────────────────────────────────────────────── */
 const INFO = {
   doctor: {
-    icon: '👨‍⚕️', title: 'ישות: רופא', type: 'entity',
-    color: C.entity, bg: C.entityBg,
+    icon: '👨‍⚕️', title: 'ישות: רופא', color: C.entity, bg: C.entityBg,
     body: 'ישות המייצגת רופא הפועל במרפאה. מזוהה ע"י מספר רישיון ייחודי.',
     attrs: [
       { name: 'מספר רישיון', isPK: true,  desc: 'מפתח ראשי — מזהה ייחודי' },
       { name: 'שם רופא',     isPK: false, desc: 'שם מלא כפי שמופיע ברישיון' },
     ],
-    note: 'קשר 1:N עם תור — רופא אחד יכול לקבל תורים רבים',
+    cardinality: [
+      { side: 'רופא בקשר "מקבל"', notation: '(0,N)', meaning: 'רופא יכול להשתתף ב-0 עד הרבה תורים' },
+    ],
+    note: 'משתתף בקשר אחד: מקבל → תור (יחס 1:N)',
   },
   patient: {
-    icon: '🧑', title: 'ישות: מטופל', type: 'entity',
-    color: C.entity, bg: C.entityBg,
+    icon: '🧑', title: 'ישות: מטופל', color: C.entity, bg: C.entityBg,
     body: 'ישות המייצגת מטופל הנרשם לתורים במרפאה.',
     attrs: [
-      { name: 'מספר ת.ז.',    isPK: true,  desc: 'מפתח ראשי — תעודת זהות' },
+      { name: 'מספר ת.ז.',   isPK: true,  desc: 'מפתח ראשי — תעודת זהות' },
       { name: 'שם מטופל',    isPK: false, desc: 'שם מלא של המטופל' },
       { name: 'מספר טלפון',  isPK: false, desc: 'מספר טלפון ליצירת קשר' },
     ],
-    note: 'קשר 1:N עם תור — מטופל אחד יכול לקבוע תורים רבים',
+    cardinality: [
+      { side: 'מטופל בקשר "קובע"', notation: '(0,N)', meaning: 'מטופל יכול לקבוע 0 עד הרבה תורים' },
+    ],
+    note: 'משתתף בקשר אחד: קובע → תור (יחס 1:N)',
   },
   appointment: {
-    icon: '📅', title: 'ישות: תור', type: 'entity',
-    color: C.entity, bg: C.entityBg,
-    body: 'ישות חלשה המייצגת תור — חיבור בין מטופל לרופא במועד מסוים.',
+    icon: '📅', title: 'ישות: תור', color: C.entity, bg: C.entityBg,
+    body: 'ישות המייצגת תור — חיבור בין מטופל לרופא במועד מסוים.',
     attrs: [
-      { name: 'מספר תור',    isPK: true,  desc: 'מפתח ראשי (auto-increment)' },
+      { name: 'מספר תור',   isPK: true,  desc: 'מפתח ראשי (auto-increment)' },
       { name: 'תאריך ושעה', isPK: false, desc: 'TIMESTAMPTZ — מועד התור' },
       { name: 'סיבת ביקור', isPK: false, desc: 'תיאור חופשי של הביקור' },
     ],
-    fks: ['מספר רישיון → רופא (FK)', 'מספר ת.ז. → מטופל (FK)'],
-    note: 'N:1 עם רופא · N:1 עם מטופל',
+    fks: ['מספר רישיון → רופא', 'מספר ת.ז. → מטופל'],
+    cardinality: [
+      { side: 'תור בקשר "מקבל"', notation: '(1,1)', meaning: 'כל תור משויך לבדיוק רופא אחד' },
+      { side: 'תור בקשר "קובע"', notation: '(1,1)', meaning: 'כל תור משויך לבדיוק מטופל אחד' },
+    ],
+    note: 'משתתף בשני קשרים: N:1 עם רופא · N:1 עם מטופל',
   },
   recv: {
-    icon: '🔗', title: 'קשר: מקבל', type: 'relation',
-    color: C.relation, bg: C.relationBg,
+    icon: '🔗', title: 'קשר: מקבל', color: C.relation, bg: C.relationBg,
     body: 'קשר בין "רופא" ל"תור" — רופא מקבל מטופלים לתורים.',
+    ratio: '1 : N',
     cardinality: [
-      { side: 'רופא',  notation: '(0,N)', meaning: 'רופא יכול להשתתף בין אפס לתורים רבים' },
+      { side: 'רופא',  notation: '(0,N)', meaning: 'רופא יכול להשתתף בין 0 לתורים רבים' },
       { side: 'תור',   notation: '(1,1)', meaning: 'כל תור שייך לבדיוק רופא אחד' },
     ],
   },
   book: {
-    icon: '📋', title: 'קשר: קובע', type: 'relation',
-    color: C.relation, bg: C.relationBg,
+    icon: '📋', title: 'קשר: קובע', color: C.relation, bg: C.relationBg,
     body: 'קשר בין "מטופל" ל"תור" — מטופל קובע תורים.',
+    ratio: '1 : N',
     cardinality: [
-      { side: 'מטופל', notation: '(0,N)', meaning: 'מטופל יכול לקבוע בין אפס לתורים רבים' },
+      { side: 'מטופל', notation: '(0,N)', meaning: 'מטופל יכול לקבוע בין 0 לתורים רבים' },
       { side: 'תור',   notation: '(1,1)', meaning: 'כל תור שייך לבדיוק מטופל אחד' },
     ],
   },
 };
 
-/* ── SVG primitives ──────────────────────────────────────────────── */
+/* ── SVG primitives ─────────────────────────────────────────────── */
 
-function EntityRect({ cx, cy, label, w = 160, h = 48, active, ...events }) {
+function EntityRect({ cx, cy, label, w = 160, h = 50, active, ...events }) {
   return (
     <g style={{ cursor: 'pointer' }} {...events}>
       <rect x={cx - w / 2} y={cy - h / 2} width={w} height={h}
@@ -97,13 +122,13 @@ function EntityRect({ cx, cy, label, w = 160, h = 48, active, ...events }) {
         strokeWidth={active ? 3.5 : 2.5} rx={4}
         style={{ filter: active ? 'drop-shadow(0 0 8px rgba(204,0,0,0.45))' : 'none', transition: 'all 0.18s' }} />
       <text x={cx} y={cy} textAnchor="middle" dominantBaseline="middle"
-        fontSize={15} fontWeight="bold"
+        fontSize={16} fontWeight="bold"
         fill={active ? C.entityHl : C.entity} fontFamily={FONT}>{label}</text>
     </g>
   );
 }
 
-function RelDiamond({ cx, cy, label, hw = 58, hh = 33, active, ...events }) {
+function RelDiamond({ cx, cy, label, hw = 62, hh = 36, active, ...events }) {
   const pts = `${cx},${cy - hh} ${cx + hw},${cy} ${cx},${cy + hh} ${cx - hw},${cy}`;
   return (
     <g style={{ cursor: 'pointer' }} {...events}>
@@ -113,7 +138,7 @@ function RelDiamond({ cx, cy, label, hw = 58, hh = 33, active, ...events }) {
         strokeWidth={active ? 3 : 2.5}
         style={{ filter: active ? 'drop-shadow(0 0 8px rgba(109,40,217,0.4))' : 'none', transition: 'all 0.18s' }} />
       <text x={cx} y={cy} textAnchor="middle" dominantBaseline="middle"
-        fontSize={13} fontWeight="bold"
+        fontSize={14} fontWeight="bold"
         fill={active ? C.relationHl : C.relation} fontFamily={FONT}>{label}</text>
     </g>
   );
@@ -121,9 +146,7 @@ function RelDiamond({ cx, cy, label, hw = 58, hh = 33, active, ...events }) {
 
 function AttrEllipse({ cx, cy, label, isPK = false, rx = 64, ry = 21, active }) {
   const stroke = isPK ? C.pk : C.attr;
-  const fill   = active
-    ? (isPK ? '#fecaca' : '#99f6e4')
-    : (isPK ? C.pkBg   : C.attrBg);
+  const fill   = active ? (isPK ? '#fecaca' : '#99f6e4') : (isPK ? C.pkBg : C.attrBg);
   return (
     <g>
       <ellipse cx={cx} cy={cy} rx={rx} ry={ry}
@@ -148,26 +171,72 @@ function ConnLine({ x1, y1, x2, y2, main = false, active }) {
   );
 }
 
-/** Styled cardinality badge — dark pill for the (min,max) label */
-function CardBadge({ x, y, label, accent = false }) {
-  const len = label.length;
-  const w   = len <= 1 ? 22 : len <= 3 ? 30 : 46;
-  const bg  = accent ? C.entityHl : '#1e293b';
+/** Big participation badge with dotted leader to the line.
+    `entityName` — a short tag like "רופא" shown above the (min,max).        */
+function ParticipationTag({ pos, label, entityName, color = '#1e293b', active }) {
+  const w = 78, h = 38;
   return (
     <g style={{ pointerEvents: 'none' }}>
-      <rect x={x - w / 2} y={y - 11} width={w} height={22} rx={5} fill={bg} />
-      <text x={x} y={y} textAnchor="middle" dominantBaseline="middle"
-        fontSize={11} fontWeight="bold" fill="#fff" fontFamily={FONT}>{label}</text>
+      {/* Leader line from anchor on-line point to badge center */}
+      <line x1={pos.anchorX} y1={pos.anchorY} x2={pos.x} y2={pos.y}
+        stroke={color} strokeWidth={1.2} strokeDasharray="3,2" opacity={0.55} />
+      {/* Anchor dot ON the relationship line */}
+      <circle cx={pos.anchorX} cy={pos.anchorY} r={3} fill={color} />
+      {/* Badge */}
+      <rect x={pos.x - w/2} y={pos.y - h/2} width={w} height={h} rx={8}
+        fill="#fff" stroke={color} strokeWidth={active ? 2.5 : 2}
+        style={{ filter: active ? `drop-shadow(0 0 6px ${color}66)` : 'drop-shadow(0 1px 2px rgba(0,0,0,0.08))', transition: 'all 0.18s' }} />
+      {/* Entity tag (small, top) */}
+      <text x={pos.x} y={pos.y - 7} textAnchor="middle" dominantBaseline="middle"
+        fontSize={10} fontWeight={600} fill="#64748b" fontFamily={FONT}>
+        {entityName}
+      </text>
+      {/* (min,max) (big, bottom) */}
+      <text x={pos.x} y={pos.y + 8} textAnchor="middle" dominantBaseline="middle"
+        fontSize={13} fontWeight={800} fill={color} fontFamily={FONT}>
+        {label}
+      </text>
     </g>
   );
 }
 
-/* ── Legend item ─────────────────────────────────────────────────── */
+/** Big "1 : N" ratio badge — drawn near the diamond. */
+function RatioBadge({ x, y, ratio = '1 : N', active }) {
+  const w = 64, h = 30;
+  return (
+    <g style={{ pointerEvents: 'none' }}>
+      <rect x={x - w/2} y={y - h/2} width={w} height={h} rx={15}
+        fill={active ? C.relationHl : '#fff'}
+        stroke={C.relationHl} strokeWidth={2}
+        style={{ filter: 'drop-shadow(0 1px 3px rgba(124,58,237,0.25))', transition: 'all 0.18s' }} />
+      <text x={x} y={y} textAnchor="middle" dominantBaseline="middle"
+        fontSize={15} fontWeight={800}
+        fill={active ? '#fff' : C.relationHl} fontFamily={FONT}>
+        {ratio}
+      </text>
+    </g>
+  );
+}
+
+/** Tiny "1" / "N" marker placed right at the entity end of a line — classic Chen ratio. */
+function RatioTick({ pos, label, color }) {
+  return (
+    <g style={{ pointerEvents: 'none' }}>
+      <circle cx={pos.x} cy={pos.y} r={11} fill="#fff" stroke={color} strokeWidth={2} />
+      <text x={pos.x} y={pos.y} textAnchor="middle" dominantBaseline="middle"
+        fontSize={12} fontWeight={800} fill={color} fontFamily={FONT}>
+        {label}
+      </text>
+    </g>
+  );
+}
+
+/* ── Legend item ────────────────────────────────────────────────── */
 function LegendItem({ shape, color, bg, label, isPK }) {
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
       <svg width={38} height={26}>
-        {shape === 'rect' && <rect x={3} y={5} width={32} height={16} rx={2} fill={bg} stroke={color} strokeWidth={2} />}
+        {shape === 'rect'    && <rect x={3} y={5} width={32} height={16} rx={2} fill={bg} stroke={color} strokeWidth={2} />}
         {shape === 'diamond' && <polygon points="19,2 35,13 19,24 3,13" fill={bg} stroke={color} strokeWidth={2} />}
         {shape === 'ellipse' && <ellipse cx={19} cy={13} rx={16} ry={10} fill={bg} stroke={color} strokeWidth={isPK ? 2 : 1.5} />}
       </svg>
@@ -178,7 +247,7 @@ function LegendItem({ shape, color, bg, label, isPK }) {
   );
 }
 
-/* ── Info panel ──────────────────────────────────────────────────── */
+/* ── Info panel ─────────────────────────────────────────────────── */
 function InfoPanel({ nodeId, onClose }) {
   const info = INFO[nodeId];
   if (!info) return null;
@@ -189,25 +258,31 @@ function InfoPanel({ nodeId, onClose }) {
       marginTop: '1rem', position: 'relative',
       animation: 'erdFadeIn 0.2s ease',
     }}>
-      {/* Close */}
       <button onClick={onClose} style={{
         position: 'absolute', top: '0.6rem', left: '0.75rem',
         background: 'none', border: 'none', cursor: 'pointer',
         fontSize: '1rem', color: '#94a3b8', lineHeight: 1,
       }} title="סגור">✕</button>
 
-      {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '0.7rem', paddingLeft: '1.8rem' }}>
         <span style={{ fontSize: '1.6rem' }}>{info.icon}</span>
         <div>
-          <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: 800, color: info.color }}>{info.title}</h3>
-          <p  style={{ margin: 0, fontSize: '0.8rem', color: '#64748b' }}>{info.body}</p>
+          <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: 800, color: info.color }}>
+            {info.title}
+            {info.ratio && (
+              <span style={{
+                marginRight: '0.6rem',
+                background: C.relationHl, color: '#fff',
+                padding: '0.15rem 0.6rem', borderRadius: '999px',
+                fontSize: '0.75rem', fontWeight: 800,
+              }}>{info.ratio}</span>
+            )}
+          </h3>
+          <p style={{ margin: 0, fontSize: '0.8rem', color: '#64748b' }}>{info.body}</p>
         </div>
       </div>
 
       <div style={{ display: 'flex', gap: '1.5rem', flexWrap: 'wrap', marginTop: '0.85rem' }}>
-
-        {/* Attributes */}
         {info.attrs && (
           <div style={{ flex: '1 1 220px' }}>
             <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#475569', marginBottom: '0.4rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>תכונות</div>
@@ -227,8 +302,6 @@ function InfoPanel({ nodeId, onClose }) {
             ))}
           </div>
         )}
-
-        {/* FKs */}
         {info.fks && (
           <div style={{ flex: '1 1 200px' }}>
             <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#475569', marginBottom: '0.4rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>מפתחות זרים</div>
@@ -239,10 +312,8 @@ function InfoPanel({ nodeId, onClose }) {
             ))}
           </div>
         )}
-
-        {/* Cardinality */}
         {info.cardinality && (
-          <div style={{ flex: '1 1 260px' }}>
+          <div style={{ flex: '1 1 280px' }}>
             <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#475569', marginBottom: '0.4rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>קרדינליות (min,max)</div>
             {info.cardinality.map(c => (
               <div key={c.side} style={{ display: 'flex', gap: '0.55rem', alignItems: 'center', marginBottom: '0.35rem' }}>
@@ -258,8 +329,6 @@ function InfoPanel({ nodeId, onClose }) {
             ))}
           </div>
         )}
-
-        {/* Note */}
         {info.note && (
           <div style={{ flex: '1 1 100%', fontSize: '0.78rem', color: '#64748b', borderTop: `1px solid ${info.color}40`, paddingTop: '0.5rem', marginTop: '0.2rem' }}>
             ℹ️ {info.note}
@@ -270,55 +339,61 @@ function InfoPanel({ nodeId, onClose }) {
   );
 }
 
-/* ── Main component ──────────────────────────────────────────────── */
+/* ── Main component ─────────────────────────────────────────────── */
 export default function ERDView() {
   const [hovered,  setHovered]  = useState(null);
   const [selected, setSelected] = useState(null);
-
   const active = hovered ?? selected;
 
-  /** event handlers for a node */
   const ev = (node) => ({
     onMouseEnter: () => setHovered(node),
     onMouseLeave: () => setHovered(null),
     onClick:      () => setSelected(s => s === node ? null : node),
   });
 
-  /* ── Layout coordinates ── */
-  const DOC  = { x: 710, y: 205 };
-  const PAT  = { x: 270, y: 205 };
-  const APT  = { x: 490, y: 420 };
-  const RECV = { x: 610, y: 320 };
-  const BOOK = { x: 375, y: 320 };
+  /* ── Layout ── */
+  const DOC  = { x: 720, y: 210 };
+  const PAT  = { x: 270, y: 210 };
+  const APT  = { x: 495, y: 440 };
+  const RECV = { x: 615, y: 325 };
+  const BOOK = { x: 375, y: 325 };
 
-  const DA_PK = { x: 858, y: 115 };
-  const DA_NM = { x: 858, y: 295 };
-  const PA_PK = { x: 122, y: 115 };
-  const PA_NM = { x:  95, y: 205 };
-  const PA_PH = { x: 122, y: 295 };
-  const AA_PK = { x: 490, y: 530 };
-  const AA_DT = { x: 315, y: 530 };
-  const AA_RS = { x: 665, y: 530 };
+  const DA_PK = { x: 870, y: 120 };
+  const DA_NM = { x: 870, y: 300 };
+  const PA_PK = { x: 120, y: 120 };
+  const PA_NM = { x:  90, y: 210 };
+  const PA_PH = { x: 120, y: 300 };
+  const AA_PK = { x: 495, y: 555 };
+  const AA_DT = { x: 315, y: 555 };
+  const AA_RS = { x: 670, y: 555 };
 
-  /* ── Cardinality badge positions ──
-     (0,N) placed ~25 % from entity toward diamond (near entity)
-     (1,1) placed ~75 % from diamond toward entity (near entity) — but on the opposite side
-     Standard Chen: label near the ENTITY it annotates                 */
-  // Doctor side: (0,N) at 25 % Doc→RECV
-  const CD_DOC  = { x: Math.round(DOC.x  + .25*(RECV.x-DOC.x)),  y: Math.round(DOC.y  + .25*(RECV.y-DOC.y))  }; // ≈ (685,234)
-  // Appointment side from RECV: (1,1) at 25 % APT→RECV
-  const CD_APT1 = { x: Math.round(APT.x  + .25*(RECV.x-APT.x)),  y: Math.round(APT.y  + .25*(RECV.y-APT.y))  }; // ≈ (520,395)
-  // Patient side: (0,N) at 25 % PAT→BOOK
-  const CD_PAT  = { x: Math.round(PAT.x  + .25*(BOOK.x-PAT.x)),  y: Math.round(PAT.y  + .25*(BOOK.y-PAT.y))  }; // ≈ (296,234)
-  // Appointment side from BOOK: (1,1) at 25 % APT→BOOK
-  const CD_APT2 = { x: Math.round(APT.x  + .25*(BOOK.x-APT.x)),  y: Math.round(APT.y  + .25*(BOOK.y-APT.y))  }; // ≈ (461,395)
+  /* ── Cardinality positions ── */
+  /* (min,max) participation tags — placed perpendicular to each line.
+     Sign of `d` decides which side of the line the badge sits.
+     For DOC→RECV (going down-left) we use d=-50 → upper-right of line.
+     For PAT→BOOK (going down-right) we use d=+50 → upper-left  of line.
+     For RECV→APT and BOOK→APT we use the same convention.            */
+  const POS_DOC      = offsetOn(DOC,  RECV, 0.42, -55);   // near DOC, outward
+  const POS_APT_RECV = offsetOn(APT,  RECV, 0.42, +55);   // near APT, outward (right side)
+  const POS_PAT      = offsetOn(PAT,  BOOK, 0.42, +55);   // near PAT, outward (left side)
+  const POS_APT_BOOK = offsetOn(APT,  BOOK, 0.42, -55);   // near APT, outward (left side)
+
+  /* "1 / N" ratio ticks placed AT the entity-end of each line */
+  const TICK_DOC      = lerp(DOC,  RECV, 0.18);
+  const TICK_APT_RECV = lerp(APT,  RECV, 0.20);
+  const TICK_PAT      = lerp(PAT,  BOOK, 0.18);
+  const TICK_APT_BOOK = lerp(APT,  BOOK, 0.20);
+
+  /* "1 : N" ratio badges — placed NEXT to each diamond (outward). */
+  const RATIO_RECV = { x: RECV.x + 100, y: RECV.y };
+  const RATIO_BOOK = { x: BOOK.x - 100, y: BOOK.y };
 
   return (
     <div>
-      {/* ── Page header ── */}
+      {/* Page header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
         <h2 style={{ margin: 0, color: '#1e293b', fontSize: '1.2rem', fontWeight: 700 }}>
-          דיאגרמת ERD — Chen Notation
+          דיאגרמת ERD — Chen Notation (עם קרדינליות מלאה)
         </h2>
         <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
           {hovered && !selected && (
@@ -327,9 +402,7 @@ export default function ERDView() {
               borderRadius: '6px', padding: '0.25rem 0.7rem',
               fontSize: '0.74rem', fontWeight: 600,
               animation: 'erdFadeIn 0.15s ease',
-            }}>
-              לחץ לפרטים
-            </span>
+            }}>לחץ לפרטים</span>
           )}
           <span style={{
             background: colors.primaryBg, color: colors.primary,
@@ -339,7 +412,7 @@ export default function ERDView() {
         </div>
       </div>
 
-      {/* ── Parking note ── */}
+      {/* Parking note */}
       <div style={{
         background: '#fffbeb', border: '1px solid #fcd34d', borderRadius: '10px',
         padding: '0.7rem 1rem', marginBottom: '1rem',
@@ -353,7 +426,7 @@ export default function ERDView() {
         </span>
       </div>
 
-      {/* ── SVG canvas ── */}
+      {/* SVG canvas */}
       <div style={{
         background: '#fafcff', borderRadius: '12px',
         border: '1px solid #e2e8f0',
@@ -361,14 +434,13 @@ export default function ERDView() {
         boxShadow: '0 1px 4px rgba(0,0,0,0.06)',
         userSelect: 'none',
       }}>
-        <svg viewBox="0 0 990 585" style={{ width: '100%', minWidth: '740px', display: 'block' }}>
+        <svg viewBox="0 0 990 620" style={{ width: '100%', minWidth: '780px', display: 'block' }}>
 
-          {/* Hint */}
           <text x={495} y={28} textAnchor="middle" fontSize={11} fill="#94a3b8" fontFamily={FONT}>
             ✦ רחף מעל ישות / קשר לסימון · לחץ לפרטים
           </text>
 
-          {/* ── Attr lines (below everything) ── */}
+          {/* Attribute lines */}
           <ConnLine x1={DOC.x} y1={DOC.y} x2={DA_PK.x} y2={DA_PK.y} active={directly('doctor', active)} />
           <ConnLine x1={DOC.x} y1={DOC.y} x2={DA_NM.x} y2={DA_NM.y} active={directly('doctor', active)} />
           <ConnLine x1={PAT.x} y1={PAT.y} x2={PA_PK.x} y2={PA_PK.y} active={directly('patient', active)} />
@@ -378,57 +450,111 @@ export default function ERDView() {
           <ConnLine x1={APT.x} y1={APT.y} x2={AA_DT.x} y2={AA_DT.y} active={directly('appointment', active)} />
           <ConnLine x1={APT.x} y1={APT.y} x2={AA_RS.x} y2={AA_RS.y} active={directly('appointment', active)} />
 
-          {/* ── Main relationship lines ── */}
+          {/* Main relationship lines */}
           <ConnLine x1={DOC.x}  y1={DOC.y}  x2={RECV.x} y2={RECV.y} main active={hl('recv', active)} />
           <ConnLine x1={RECV.x} y1={RECV.y} x2={APT.x}  y2={APT.y}  main active={hl('recv', active)} />
           <ConnLine x1={PAT.x}  y1={PAT.y}  x2={BOOK.x} y2={BOOK.y} main active={hl('book', active)} />
           <ConnLine x1={BOOK.x} y1={BOOK.y} x2={APT.x}  y2={APT.y}  main active={hl('book', active)} />
 
-          {/* ── Cardinality badges (drawn BEFORE entities so entities sit on top) ── */}
-          {/* Doctor side of מקבל → (0,N) near Doctor */}
-          <CardBadge x={CD_DOC.x}  y={CD_DOC.y}  label="(0,N)" />
-          {/* Appointment side of מקבל → (1,1) near Appointment */}
-          <CardBadge x={CD_APT1.x} y={CD_APT1.y} label="(1,1)" accent />
-          {/* Patient side of קובע → (0,N) near Patient */}
-          <CardBadge x={CD_PAT.x}  y={CD_PAT.y}  label="(0,N)" />
-          {/* Appointment side of קובע → (1,1) near Appointment */}
-          <CardBadge x={CD_APT2.x} y={CD_APT2.y} label="(1,1)" accent />
+          {/* ── Classic Chen ratio ticks: 1 / N right at the entity ── */}
+          <RatioTick pos={TICK_DOC}      label="1" color={C.entity} />
+          <RatioTick pos={TICK_APT_RECV} label="N" color={C.entity} />
+          <RatioTick pos={TICK_PAT}      label="1" color={C.entity} />
+          <RatioTick pos={TICK_APT_BOOK} label="N" color={C.entity} />
+
+          {/* ── (min,max) participation tags with leader lines ── */}
+          <ParticipationTag pos={POS_DOC}      label="(0,N)" entityName="רופא"  color="#1e293b" active={hl('recv', active)} />
+          <ParticipationTag pos={POS_APT_RECV} label="(1,1)" entityName="תור"   color={C.entityHl} active={hl('recv', active)} />
+          <ParticipationTag pos={POS_PAT}      label="(0,N)" entityName="מטופל" color="#1e293b" active={hl('book', active)} />
+          <ParticipationTag pos={POS_APT_BOOK} label="(1,1)" entityName="תור"   color={C.entityHl} active={hl('book', active)} />
+
+          {/* ── Big "1 : N" ratio badges next to each diamond ── */}
+          <RatioBadge x={RATIO_RECV.x} y={RATIO_RECV.y} ratio="1 : N" active={hl('recv', active)} />
+          <RatioBadge x={RATIO_BOOK.x} y={RATIO_BOOK.y} ratio="1 : N" active={hl('book', active)} />
 
           {/* ── Entities ── */}
-          <EntityRect cx={DOC.x} cy={DOC.y} label="רופא"
-            active={hl('doctor', active)} {...ev('doctor')} />
-          <EntityRect cx={PAT.x} cy={PAT.y} label="מטופל"
-            active={hl('patient', active)} {...ev('patient')} />
-          <EntityRect cx={APT.x} cy={APT.y} label="תור" w={185}
-            active={hl('appointment', active)} {...ev('appointment')} />
+          <EntityRect cx={DOC.x} cy={DOC.y} label="רופא"   active={hl('doctor', active)}      {...ev('doctor')} />
+          <EntityRect cx={PAT.x} cy={PAT.y} label="מטופל"  active={hl('patient', active)}     {...ev('patient')} />
+          <EntityRect cx={APT.x} cy={APT.y} label="תור" w={185} active={hl('appointment', active)} {...ev('appointment')} />
 
           {/* ── Relationships ── */}
-          <RelDiamond cx={RECV.x} cy={RECV.y} label="מקבל"
-            active={hl('recv', active)} {...ev('recv')} />
-          <RelDiamond cx={BOOK.x} cy={BOOK.y} label="קובע"
-            active={hl('book', active)} {...ev('book')} />
+          <RelDiamond cx={RECV.x} cy={RECV.y} label="מקבל" active={hl('recv', active)} {...ev('recv')} />
+          <RelDiamond cx={BOOK.x} cy={BOOK.y} label="קובע" active={hl('book', active)} {...ev('book')} />
 
           {/* ── Attributes ── */}
           <AttrEllipse cx={DA_PK.x} cy={DA_PK.y} label="מספר רישיון" isPK active={directly('doctor', active)} />
-          <AttrEllipse cx={DA_NM.x} cy={DA_NM.y} label="שם רופא"              active={directly('doctor', active)} />
+          <AttrEllipse cx={DA_NM.x} cy={DA_NM.y} label="שם רופא"          active={directly('doctor', active)} />
           <AttrEllipse cx={PA_PK.x} cy={PA_PK.y} label="מספר ת.ז."  isPK active={directly('patient', active)} />
-          <AttrEllipse cx={PA_NM.x} cy={PA_NM.y} label="שם מטופל"             active={directly('patient', active)} />
-          <AttrEllipse cx={PA_PH.x} cy={PA_PH.y} label="מספר טלפון"           active={directly('patient', active)} />
+          <AttrEllipse cx={PA_NM.x} cy={PA_NM.y} label="שם מטופל"         active={directly('patient', active)} />
+          <AttrEllipse cx={PA_PH.x} cy={PA_PH.y} label="מספר טלפון"       active={directly('patient', active)} />
           <AttrEllipse cx={AA_PK.x} cy={AA_PK.y} label="מספר תור"   isPK active={directly('appointment', active)} />
-          <AttrEllipse cx={AA_DT.x} cy={AA_DT.y} label="תאריך ושעה"           active={directly('appointment', active)} />
-          <AttrEllipse cx={AA_RS.x} cy={AA_RS.y} label="סיבת ביקור"           active={directly('appointment', active)} />
+          <AttrEllipse cx={AA_DT.x} cy={AA_DT.y} label="תאריך ושעה"       active={directly('appointment', active)} />
+          <AttrEllipse cx={AA_RS.x} cy={AA_RS.y} label="סיבת ביקור"       active={directly('appointment', active)} />
 
-          {/* ── FK micro-labels ── */}
-          <text x={568} y={408} fontSize={9} fill="#94a3b8" fontFamily={FONT} textAnchor="middle">FK: מספר רישיון</text>
-          <text x={422} y={408} fontSize={9} fill="#94a3b8" fontFamily={FONT} textAnchor="middle">FK: מספר ת.ז.</text>
-
+          {/* FK micro-labels (tucked under appointment, near attribute lines) */}
+          <text x={575} y={425} fontSize={9} fill="#94a3b8" fontFamily={FONT} textAnchor="middle">FK: מספר רישיון</text>
+          <text x={415} y={425} fontSize={9} fill="#94a3b8" fontFamily={FONT} textAnchor="middle">FK: מספר ת.ז.</text>
         </svg>
       </div>
 
-      {/* ── Info panel ── */}
+      {/* Info panel */}
       {selected && <InfoPanel nodeId={selected} onClose={() => setSelected(null)} />}
 
-      {/* ── Legend ── */}
+      {/* Cardinality summary table — always visible */}
+      <div style={{
+        background: 'white', borderRadius: '12px', border: '1px solid #e2e8f0',
+        padding: '0.85rem 1.25rem', marginTop: '1rem',
+      }}>
+        <div style={{ fontSize: '0.85rem', fontWeight: 700, color: '#1e293b', marginBottom: '0.6rem' }}>
+          📊 סיכום קרדינליות
+        </div>
+        <div style={{ overflowX: 'auto' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.82rem', direction: 'rtl' }}>
+            <thead>
+              <tr style={{ background: '#f8fafc', color: '#475569', fontWeight: 700 }}>
+                <th style={{ padding: '0.5rem', textAlign: 'right', borderBottom: '1px solid #e2e8f0' }}>קשר</th>
+                <th style={{ padding: '0.5rem', textAlign: 'center', borderBottom: '1px solid #e2e8f0' }}>צד שמאל</th>
+                <th style={{ padding: '0.5rem', textAlign: 'center', borderBottom: '1px solid #e2e8f0' }}>(min,max)</th>
+                <th style={{ padding: '0.5rem', textAlign: 'center', borderBottom: '1px solid #e2e8f0' }}>יחס</th>
+                <th style={{ padding: '0.5rem', textAlign: 'center', borderBottom: '1px solid #e2e8f0' }}>(min,max)</th>
+                <th style={{ padding: '0.5rem', textAlign: 'center', borderBottom: '1px solid #e2e8f0' }}>צד ימין</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td style={{ padding: '0.55rem', color: C.relation, fontWeight: 700 }}>מקבל ◇</td>
+                <td style={{ padding: '0.55rem', textAlign: 'center', color: C.entity, fontWeight: 600 }}>רופא</td>
+                <td style={{ padding: '0.55rem', textAlign: 'center' }}>
+                  <span style={{ background: '#1e293b', color: '#fff', borderRadius: '5px', padding: '0.1rem 0.45rem', fontWeight: 700 }}>(0,N)</span>
+                </td>
+                <td style={{ padding: '0.55rem', textAlign: 'center' }}>
+                  <span style={{ background: C.relationHl, color: '#fff', borderRadius: '999px', padding: '0.15rem 0.65rem', fontWeight: 800 }}>1 : N</span>
+                </td>
+                <td style={{ padding: '0.55rem', textAlign: 'center' }}>
+                  <span style={{ background: C.entityHl, color: '#fff', borderRadius: '5px', padding: '0.1rem 0.45rem', fontWeight: 700 }}>(1,1)</span>
+                </td>
+                <td style={{ padding: '0.55rem', textAlign: 'center', color: C.entity, fontWeight: 600 }}>תור</td>
+              </tr>
+              <tr style={{ background: '#fafafa' }}>
+                <td style={{ padding: '0.55rem', color: C.relation, fontWeight: 700 }}>קובע ◇</td>
+                <td style={{ padding: '0.55rem', textAlign: 'center', color: C.entity, fontWeight: 600 }}>מטופל</td>
+                <td style={{ padding: '0.55rem', textAlign: 'center' }}>
+                  <span style={{ background: '#1e293b', color: '#fff', borderRadius: '5px', padding: '0.1rem 0.45rem', fontWeight: 700 }}>(0,N)</span>
+                </td>
+                <td style={{ padding: '0.55rem', textAlign: 'center' }}>
+                  <span style={{ background: C.relationHl, color: '#fff', borderRadius: '999px', padding: '0.15rem 0.65rem', fontWeight: 800 }}>1 : N</span>
+                </td>
+                <td style={{ padding: '0.55rem', textAlign: 'center' }}>
+                  <span style={{ background: C.entityHl, color: '#fff', borderRadius: '5px', padding: '0.1rem 0.45rem', fontWeight: 700 }}>(1,1)</span>
+                </td>
+                <td style={{ padding: '0.55rem', textAlign: 'center', color: C.entity, fontWeight: 600 }}>תור</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* Legend */}
       <div style={{
         background: 'white', borderRadius: '12px', border: '1px solid #e2e8f0',
         padding: '0.85rem 1.25rem', marginTop: '1rem',
@@ -439,6 +565,11 @@ export default function ERDView() {
         <LegendItem shape="diamond" color={C.relation} bg={C.relationBg} label="קשר (Relationship)" />
         <LegendItem shape="ellipse" color={C.attr}     bg={C.attrBg}     label="תכונה (Attribute)" />
         <LegendItem shape="ellipse" color={C.pk}       bg={C.pkBg}       label="מפתח ראשי (PK)" isPK />
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+          <span style={{ width: 22, height: 22, border: `2px solid ${C.entity}`, borderRadius: '50%', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: '0.7rem', color: C.entity }}>1</span>
+          <span style={{ width: 22, height: 22, border: `2px solid ${C.entity}`, borderRadius: '50%', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: '0.7rem', color: C.entity }}>N</span>
+          <span style={{ color: '#475569', fontSize: '0.82rem' }}>יחס Chen (1 : N)</span>
+        </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
           <span style={{ background: '#1e293b', color: '#fff', borderRadius: '5px', padding: '0.1rem 0.45rem', fontSize: '0.75rem', fontWeight: 700 }}>(0,N)</span>
           <span style={{ background: C.entityHl, color: '#fff', borderRadius: '5px', padding: '0.1rem 0.45rem', fontSize: '0.75rem', fontWeight: 700 }}>(1,1)</span>
