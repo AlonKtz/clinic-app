@@ -24,8 +24,8 @@ jobs:
 
       - name: Build
         env:
-          VITE_SUPABASE_URL: https://yxmbammlzweasjvpouqn.supabase.co
-          VITE_SUPABASE_ANON_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl4bWJhbW1sendlYXNqdnBvdXFuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcwOTg0MjgsImV4cCI6MjA5MjY3NDQyOH0.JZfWJcSyGWVQhj2OScCzTpLvEpVly6IQSXfcKQI-YI0
+          VITE_SUPABASE_URL: https://pvqucrpxfupqefhvcohc.supabase.co
+          VITE_SUPABASE_ANON_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB2cXVjcnB4ZnVwcWVmaHZjb2hjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwNzkzMDQsImV4cCI6MjA5MzY1NTMwNH0.LWnayXYA3X34oEs2laj6Ep3HIOiTejjAYoys033fNh0
         run: npm run build
 
       - name: Deploy to gh-pages
