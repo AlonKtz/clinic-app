@@ -177,11 +177,11 @@ export default function ERDView() {
           {/* (0,N) near מטופל — outside triangle, CCW offset from PAT→INV direction */}
           {(() => { const p = perpOff(PAT.x,PAT.y, INV.x,INV.y,  0.22, +18); return <Cardinality key="c1" x={p.x} y={p.y} label="(0,N)" />; })()}
           {/* (1,1) near תור   — outside triangle, CCW offset from INV→APT direction */}
-          {(() => { const p = perpOff(INV.x,INV.y, APT.x,APT.y,  0.65, +18); return <Cardinality key="c2" x={p.x} y={p.y} label="(1,1)" />; })()}
+          {(() => { const p = perpOff(INV.x,INV.y, APT.x,APT.y,  0.48, +18); return <Cardinality key="c2" x={p.x} y={p.y} label="(1,1)" />; })()}
           {/* (0,N) near רופא  — outside triangle, CW  offset from DOC→RECV direction */}
           {(() => { const p = perpOff(DOC.x,DOC.y, RECV.x,RECV.y,0.22, -18); return <Cardinality key="c3" x={p.x} y={p.y} label="(0,N)" />; })()}
           {/* (1,1) near תור   — outside triangle, CW  offset from RECV→APT direction */}
-          {(() => { const p = perpOff(RECV.x,RECV.y,APT.x,APT.y, 0.65, -18); return <Cardinality key="c4" x={p.x} y={p.y} label="(1,1)" />; })()}
+          {(() => { const p = perpOff(RECV.x,RECV.y,APT.x,APT.y, 0.48, -18); return <Cardinality key="c4" x={p.x} y={p.y} label="(1,1)" />; })()}
 
           {/* ── Entities ── */}
           <Entity cx={PAT.x} cy={PAT.y} label="מטופל" />
