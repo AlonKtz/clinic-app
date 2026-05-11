@@ -65,6 +65,26 @@ function Line({ x1, y1, x2, y2, main = false }) {
   );
 }
 
+/* ── Cardinality label ── */
+function Cardinality({ x, y, label }) {
+  return (
+    <text x={x} y={y} textAnchor="middle" dominantBaseline="middle"
+      fontSize={11} fontWeight="700" fill="#DC2626" fontFamily={FONT}>
+      {label}
+    </text>
+  );
+}
+
+/* ── Geometry helpers ── */
+const lerp   = (a, b, t) => a + t * (b - a);
+const perpOff = (x1, y1, x2, y2, t, d) => {
+  const dx = x2 - x1, dy = y2 - y1, len = Math.hypot(dx, dy);
+  return {
+    x: Math.round(lerp(x1, x2, t) + (-dy / len) * d),
+    y: Math.round(lerp(y1, y2, t) + ( dx / len) * d),
+  };
+};
+
 export default function ERDView() {
   /* ── Entity centres ── */
   const PAT  = { x: 225, y: 215 };   // מטופל
@@ -151,6 +171,16 @@ export default function ERDView() {
           <Line x1={INV.x}  y1={INV.y}  x2={APT.x}  y2={APT.y}  main />
           <Line x1={DOC.x}  y1={DOC.y}  x2={RECV.x} y2={RECV.y} main />
           <Line x1={RECV.x} y1={RECV.y} x2={APT.x}  y2={APT.y}  main />
+
+          {/* ── Cardinality labels ── */}
+          {/* (0,N) near מטופל — outside triangle, CCW offset from PAT→INV direction */}
+          {(() => { const p = perpOff(PAT.x,PAT.y, INV.x,INV.y,  0.22, +18); return <Cardinality key="c1" x={p.x} y={p.y} label="(0,N)" />; })()}
+          {/* (1,1) near תור   — outside triangle, CCW offset from INV→APT direction */}
+          {(() => { const p = perpOff(INV.x,INV.y, APT.x,APT.y,  0.80, +18); return <Cardinality key="c2" x={p.x} y={p.y} label="(1,1)" />; })()}
+          {/* (0,N) near רופא  — outside triangle, CW  offset from DOC→RECV direction */}
+          {(() => { const p = perpOff(DOC.x,DOC.y, RECV.x,RECV.y,0.22, -18); return <Cardinality key="c3" x={p.x} y={p.y} label="(0,N)" />; })()}
+          {/* (1,1) near תור   — outside triangle, CW  offset from RECV→APT direction */}
+          {(() => { const p = perpOff(RECV.x,RECV.y,APT.x,APT.y, 0.80, -18); return <Cardinality key="c4" x={p.x} y={p.y} label="(1,1)" />; })()}
 
           {/* ── Entities ── */}
           <Entity cx={PAT.x} cy={PAT.y} label="מטופל" />
