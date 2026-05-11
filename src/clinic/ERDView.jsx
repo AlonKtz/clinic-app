@@ -9,13 +9,17 @@ const C = {
 };
 const FONT = "'Segoe UI', Arial, sans-serif";
 
-/* ── Entity rectangle (with field count) ── */
-function Entity({ cx, cy, label, fieldCount, w = 155, h = 62 }) {
+/* ── Entity rectangle — pass isWeak for double border ── */
+function Entity({ cx, cy, label, fieldCount, w = 155, h = 62, isWeak = false }) {
   return (
     <g>
       <rect x={cx - w/2} y={cy - h/2} width={w} height={h} rx={5}
         fill={C.entityBg} stroke={C.entity} strokeWidth={2.5}
         style={{ filter: 'drop-shadow(0 2px 6px rgba(170,0,0,0.12))' }} />
+      {isWeak && (
+        <rect x={cx - w/2 + 5} y={cy - h/2 + 5} width={w - 10} height={h - 10} rx={3}
+          fill="none" stroke={C.entity} strokeWidth={1.5} />
+      )}
       <text x={cx} y={cy - 9} textAnchor="middle" dominantBaseline="middle"
         fontSize={16} fontWeight="700" fill={C.entity} fontFamily={FONT}>
         {label}
@@ -28,13 +32,18 @@ function Entity({ cx, cy, label, fieldCount, w = 155, h = 62 }) {
   );
 }
 
-/* ── Relationship diamond ── */
-function Relation({ cx, cy, label, hw = 66, hh = 40 }) {
-  const pts = `${cx},${cy-hh} ${cx+hw},${cy} ${cx},${cy+hh} ${cx-hw},${cy}`;
+/* ── Relationship diamond — pass isIdentifying for double border ── */
+function Relation({ cx, cy, label, hw = 66, hh = 40, isIdentifying = false }) {
+  const pts  = `${cx},${cy-hh} ${cx+hw},${cy} ${cx},${cy+hh} ${cx-hw},${cy}`;
+  const s    = 0.72;
+  const ipts = `${cx},${cy-hh*s} ${cx+hw*s},${cy} ${cx},${cy+hh*s} ${cx-hw*s},${cy}`;
   return (
     <g>
       <polygon points={pts} fill={C.relationBg} stroke={C.relation} strokeWidth={2.5}
         style={{ filter: 'drop-shadow(0 2px 6px rgba(109,40,217,0.12))' }} />
+      {isIdentifying && (
+        <polygon points={ipts} fill="none" stroke={C.relation} strokeWidth={1.5} />
+      )}
       <text x={cx} y={cy} textAnchor="middle" dominantBaseline="middle"
         fontSize={13} fontWeight="700" fill={C.relation} fontFamily={FONT}>
         {label}
@@ -102,10 +111,10 @@ const CARD_LEGEND = [
 
 export default function ERDView() {
   /* ── Pan state ── */
-  const [pan, setPan]           = useState({ x: 0, y: 0 });
+  const [pan, setPan]             = useState({ x: 0, y: 0 });
   const [isPanning, setIsPanning] = useState(false);
-  const panStart                = useRef({ x: 0, y: 0 });
-  const containerRef            = useRef(null);
+  const panStart                  = useRef({ x: 0, y: 0 });
+  const containerRef              = useRef(null);
 
   const SVG_W = 800, SVG_H = 498, CONTAINER_H = 498, SLACK = 0;
 
@@ -120,30 +129,30 @@ export default function ERDView() {
     const newY = Math.min(SLACK, Math.max(CONTAINER_H - SVG_H - SLACK, e.clientY - panStart.current.y));
     setPan({ x: newX, y: newY });
   };
-  const onMouseUp   = () => setIsPanning(false);
+  const onMouseUp = () => setIsPanning(false);
 
-  /* ── Layout ── */
-  const PAT  = { x: 225, y: 215 };
-  const DOC  = { x: 755, y: 215 };
-  const APT  = { x: 490, y: 445 };
-  const INV  = { x: 358, y: 330 };
-  const RECV = { x: 622, y: 330 };
+  /* ── Layout (shifted up ~25px vs. previous to better centre vertically) ── */
+  const PAT  = { x: 225, y: 190 };
+  const DOC  = { x: 755, y: 190 };
+  const APT  = { x: 490, y: 420 };
+  const INV  = { x: 358, y: 305 };
+  const RECV = { x: 622, y: 305 };
 
-  const PA_PK = { x: 80,  y: 108 };
-  const PA_NM = { x: 68,  y: 215 };
-  const PA_PH = { x: 80,  y: 322 };
-  const DA_PK = { x: 900, y: 108 };
-  const DA_NM = { x: 912, y: 215 };
-  const AA_PK = { x: 490, y: 562 };
-  const AA_DT = { x: 310, y: 562 };
-  const AA_RS = { x: 670, y: 562 };
+  const PA_PK = { x: 80,  y: 83  };
+  const PA_NM = { x: 68,  y: 190 };
+  const PA_PH = { x: 80,  y: 297 };
+  const DA_PK = { x: 900, y: 83  };
+  const DA_NM = { x: 912, y: 190 };
+  const AA_PK = { x: 490, y: 537 };
+  const AA_DT = { x: 310, y: 537 };
+  const AA_RS = { x: 670, y: 537 };
 
   return (
     <div>
       {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.85rem' }}>
         <h2 style={{ margin: 0, color: '#1e293b', fontSize: '1.15rem', fontWeight: 700 }}>
-          דיאגרמת ERD — Chen Notation
+          ERD Diagram
         </h2>
         <span style={{
           background: '#FEF3C7', color: '#92400E', border: '1px solid #FCD34D',
@@ -236,14 +245,14 @@ export default function ERDView() {
           {(() => { const p = perpOff(DOC.x,DOC.y,   RECV.x,RECV.y, 0.22, -18); return <Cardinality key="c3" x={p.x} y={p.y} label="(0,N)" />; })()}
           {(() => { const p = perpOff(RECV.x,RECV.y, APT.x,APT.y,   0.48, -18); return <Cardinality key="c4" x={p.x} y={p.y} label="(1,1)" />; })()}
 
-          {/* Entities */}
+          {/* Entities — תור is a weak entity (double border) */}
           <Entity cx={PAT.x} cy={PAT.y} label="מטופל" fieldCount={3} />
           <Entity cx={DOC.x} cy={DOC.y} label="רופא"  fieldCount={2} />
-          <Entity cx={APT.x} cy={APT.y} label="תור"   fieldCount={3} w={165} />
+          <Entity cx={APT.x} cy={APT.y} label="תור"   fieldCount={3} w={165} isWeak />
 
-          {/* Relationships */}
-          <Relation cx={INV.x}  cy={INV.y}  label="מזמין" />
-          <Relation cx={RECV.x} cy={RECV.y} label="מקבל" />
+          {/* Relationships — identifying (double diamond) because תור is weak */}
+          <Relation cx={INV.x}  cy={INV.y}  label="מזמין" isIdentifying />
+          <Relation cx={RECV.x} cy={RECV.y} label="מקבל"  isIdentifying />
 
           {/* Attributes */}
           <Attr cx={PA_PK.x} cy={PA_PK.y} label="מספר ת.ז."    isPK />
@@ -255,9 +264,9 @@ export default function ERDView() {
           <Attr cx={AA_DT.x} cy={AA_DT.y} label="תאריך ושעה" />
           <Attr cx={AA_RS.x} cy={AA_RS.y} label="סיבת ביקור" />
 
-          {/* Pan hint */}
+          {/* Hint */}
           <text x={490} y={24} textAnchor="middle" fontSize={10.5} fill="#9CA3AF" fontFamily={FONT}>
-            גרור להזזה · מפתח ראשי (PK) מסומן בקו תחתון
+            מפתח ראשי (PK) מסומן בקו תחתון · ישות חלשה = מסגרת כפולה · קשר מזהה = יהלום כפול
           </text>
         </svg>
       </div>
@@ -270,16 +279,24 @@ export default function ERDView() {
       }}>
         <span style={{ fontWeight: 700 }}>מקרא:</span>
         {[
-          { shape: 'rect',    color: C.entity,   bg: C.entityBg,   label: 'ישות' },
-          { shape: 'diamond', color: C.relation, bg: C.relationBg, label: 'קשר' },
-          { shape: 'ellipse', color: C.attr,     bg: C.attrBg,     label: 'תכונה' },
-          { shape: 'ellipse', color: C.pk,       bg: C.pkBg,       label: 'מפתח ראשי (PK)', isPK: true },
+          { shape: 'rect',       color: C.entity,   bg: C.entityBg,   label: 'ישות חזקה' },
+          { shape: 'weakRect',   color: C.entity,   bg: C.entityBg,   label: 'ישות חלשה' },
+          { shape: 'diamond',    color: C.relation, bg: C.relationBg, label: 'קשר מזהה' },
+          { shape: 'ellipse',    color: C.attr,     bg: C.attrBg,     label: 'תכונה' },
+          { shape: 'ellipse',    color: C.pk,       bg: C.pkBg,       label: 'מפתח ראשי (PK)', isPK: true },
         ].map(({ shape, color, bg, label, isPK }) => (
           <div key={label} style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-            <svg width={34} height={24}>
-              {shape === 'rect'    && <rect    x={1}  y={4} width={32} height={16} rx={3} fill={bg} stroke={color} strokeWidth={2} />}
-              {shape === 'diamond' && <polygon points="17,1 33,12 17,23 1,12"      fill={bg} stroke={color} strokeWidth={2} />}
-              {shape === 'ellipse' && <ellipse cx={17} cy={12} rx={16} ry={10}     fill={bg} stroke={color} strokeWidth={isPK ? 2 : 1.5} />}
+            <svg width={36} height={26}>
+              {shape === 'rect'     && <rect    x={1}  y={5} width={34} height={16} rx={3} fill={bg} stroke={color} strokeWidth={2} />}
+              {shape === 'weakRect' && <>
+                <rect x={1}  y={5} width={34} height={16} rx={3} fill={bg} stroke={color} strokeWidth={2} />
+                <rect x={4}  y={8} width={28} height={10} rx={2} fill="none" stroke={color} strokeWidth={1.2} />
+              </>}
+              {shape === 'diamond'  && <>
+                <polygon points="18,1 35,13 18,25 1,13" fill={bg} stroke={color} strokeWidth={2} />
+                <polygon points="18,6 30,13 18,20 6,13" fill="none" stroke={color} strokeWidth={1.2} />
+              </>}
+              {shape === 'ellipse'  && <ellipse cx={18} cy={13} rx={17} ry={11} fill={bg} stroke={color} strokeWidth={isPK ? 2 : 1.5} />}
             </svg>
             <span style={{ textDecoration: isPK ? 'underline' : 'none' }}>{label}</span>
           </div>
