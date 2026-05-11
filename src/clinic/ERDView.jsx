@@ -107,7 +107,7 @@ export default function ERDView() {
   const panStart                = useRef({ x: 0, y: 0 });
   const containerRef            = useRef(null);
 
-  const SVG_W = 980, SVG_H = 610, CONTAINER_H = 520, SLACK = 200;
+  const SVG_W = 980, SVG_H = 610, CONTAINER_H = 520, SLACK = 125;
 
   const onMouseDown = (e) => {
     setIsPanning(true);
