@@ -107,7 +107,7 @@ export default function ERDView() {
   const panStart                = useRef({ x: 0, y: 0 });
   const containerRef            = useRef(null);
 
-  const SVG_W = 980, SVG_H = 610, CONTAINER_H = 520, SLACK = 125;
+  const SVG_W = 800, SVG_H = 498, CONTAINER_H = 498, SLACK = 0;
 
   const onMouseDown = (e) => {
     setIsPanning(true);
@@ -197,14 +197,14 @@ export default function ERDView() {
           background: '#F9FAFB', borderRadius: '14px', border: '1px solid #E5E7EB',
           boxShadow: '0 1px 6px rgba(0,0,0,0.06)', overflow: 'hidden',
           cursor: isPanning ? 'grabbing' : 'grab',
-          userSelect: 'none', height: '520px', position: 'relative',
+          userSelect: 'none', height: '498px', position: 'relative',
         }}
         onMouseDown={onMouseDown}
         onMouseMove={onMouseMove}
         onMouseUp={onMouseUp}
         onMouseLeave={onMouseUp}
       >
-        <svg width="980" height="610"
+        <svg width="800" height="498" viewBox="0 0 980 610"
           style={{ display: 'block', transform: `translate(${pan.x}px, ${pan.y}px)`, transition: isPanning ? 'none' : 'transform 0.05s' }}>
 
           <defs>
