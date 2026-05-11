@@ -107,7 +107,7 @@ export default function ERDView() {
   const panStart                = useRef({ x: 0, y: 0 });
   const containerRef            = useRef(null);
 
-  const SVG_W = 980, SVG_H = 610, CONTAINER_H = 520;
+  const SVG_W = 980, SVG_H = 610, CONTAINER_H = 520, SLACK = 200;
 
   const onMouseDown = (e) => {
     setIsPanning(true);
@@ -116,8 +116,8 @@ export default function ERDView() {
   const onMouseMove = (e) => {
     if (!isPanning) return;
     const cw = containerRef.current ? containerRef.current.clientWidth : SVG_W;
-    const newX = Math.min(0, Math.max(cw - SVG_W, e.clientX - panStart.current.x));
-    const newY = Math.min(0, Math.max(CONTAINER_H - SVG_H, e.clientY - panStart.current.y));
+    const newX = Math.min(SLACK, Math.max(cw - SVG_W - SLACK, e.clientX - panStart.current.x));
+    const newY = Math.min(SLACK, Math.max(CONTAINER_H - SVG_H - SLACK, e.clientY - panStart.current.y));
     setPan({ x: newX, y: newY });
   };
   const onMouseUp   = () => setIsPanning(false);
