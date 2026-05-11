@@ -9,9 +9,10 @@ const headers = {
 };
 
 async function req(path, opts = {}) {
+  const { headers: extraHeaders, ...restOpts } = opts;
   const res = await fetch(`${BASE}/rest/v1/${path}`, {
-    headers: { ...headers, ...(opts.headers || {}) },
-    ...opts,
+    ...restOpts,
+    headers: { ...headers, ...(extraHeaders || {}) },
   });
   if (!res.ok) {
     const msg = await res.text();
