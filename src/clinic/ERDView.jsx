@@ -213,7 +213,7 @@ export default function ERDView() {
         onMouseUp={onMouseUp}
         onMouseLeave={onMouseUp}
       >
-        <svg width="800" height="498" viewBox="0 0 980 610"
+        <svg width="100%" height="100%" viewBox="0 0 980 610" preserveAspectRatio="xMidYMid meet"
           style={{ display: 'block', transform: `translate(${pan.x}px, ${pan.y}px)`, transition: isPanning ? 'none' : 'transform 0.05s' }}>
 
           <defs>
