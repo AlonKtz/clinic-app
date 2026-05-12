@@ -132,20 +132,20 @@ export default function ERDView() {
   const onMouseUp = () => setIsPanning(false);
 
   /* ── Layout (shifted up ~25px vs. previous to better centre vertically) ── */
-  const PAT  = { x: 200, y: 190 };
-  const DOC  = { x: 730, y: 190 };
-  const APT  = { x: 465, y: 420 };
-  const INV  = { x: 333, y: 305 };
-  const RECV = { x: 597, y: 305 };
+  const PAT  = { x: 220, y: 190 };
+  const DOC  = { x: 740, y: 190 };
+  const APT  = { x: 480, y: 420 };
+  const INV  = { x: 350, y: 305 };
+  const RECV = { x: 610, y: 305 };
 
-  const PA_PK = { x: 55,  y: 83  };
-  const PA_NM = { x: 43,  y: 190 };
-  const PA_PH = { x: 55,  y: 297 };
-  const DA_PK = { x: 875, y: 83  };
-  const DA_NM = { x: 887, y: 190 };
-  const AA_PK = { x: 465, y: 537 };
-  const AA_DT = { x: 285, y: 537 };
-  const AA_RS = { x: 645, y: 537 };
+  const PA_PK = { x: 78,  y: 83  };
+  const PA_NM = { x: 68,  y: 190 };
+  const PA_PH = { x: 78,  y: 297 };
+  const DA_PK = { x: 882, y: 83  };
+  const DA_NM = { x: 892, y: 190 };
+  const AA_PK = { x: 480, y: 537 };
+  const AA_DT = { x: 300, y: 537 };
+  const AA_RS = { x: 660, y: 537 };
 
   return (
     <div>
@@ -265,7 +265,7 @@ export default function ERDView() {
           <Attr cx={AA_RS.x} cy={AA_RS.y} label="סיבת ביקור" />
 
           {/* Hint */}
-          <text x={465} y={24} textAnchor="middle" fontSize={10.5} fill="#9CA3AF" fontFamily={FONT}>
+          <text x={480} y={24} textAnchor="middle" fontSize={10.5} fill="#9CA3AF" fontFamily={FONT}>
             מפתח ראשי (PK) מסומן בקו תחתון · ישות חלשה = מסגרת כפולה · קשר מזהה = יהלום כפול
           </text>
         </svg>
