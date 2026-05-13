@@ -25,7 +25,7 @@ function SideNav({ tab, setTab }) {
     },
     {
       id: 'doctors', label: 'Doctors', he: 'רופאים',
-      ic: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 2v3M19 2v3"/><path d="M6 5a6 6 0 0 1 12 0"/><path d="M12 11v6"/><circle cx="12" cy="20" r="2"/></svg>,
+      ic: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="5.5" cy="17" r="3"/><path d="M8 17Q17 17 17 10V6"/><circle cx="17" cy="4" r="2"/></svg>,
     },
     {
       id: 'patients', label: 'Patients', he: 'מטופלים',
