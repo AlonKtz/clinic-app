@@ -227,7 +227,6 @@ export default function ClinicApp() {
                 <h1 style={{ margin: 0, fontSize: '1.6rem', fontWeight: 800, letterSpacing: '-0.5px', color: '#fff' }}>QFlow</h1>
                 <span style={{ opacity: 0.78, fontSize: '0.8rem', fontWeight: 400, color: '#fff' }}>מערכת ניהול תורים</span>
               </div>
-              <p style={{ margin: 0, opacity: 0.65, fontSize: '0.72rem', color: '#fff' }}>By Alon &amp; Afik</p>
             </div>
           </div>
 
@@ -314,7 +313,7 @@ export default function ClinicApp() {
         marginTop: '2rem', background: QF.surface, fontFamily: QF.font,
       }}>
         <span style={{ fontWeight: 700, color: QF.red500 }}>QFlow</span>
-        {' '}— מערכת ניהול תורים לקליניקה &nbsp;·&nbsp; By Alon &amp; Afik
+        {' '}— מערכת ניהול תורים לקליניקה
       </footer>
 
       {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
