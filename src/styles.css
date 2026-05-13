@@ -772,6 +772,22 @@ body {
   /* Stream list: no spine on mobile */
   .stream-spine { display: none; }
   .stream-list { padding-right: 0; }
+
+  /* Stream rows: compact single-line layout */
+  .stream-head { flex-wrap: wrap; gap: 6px; }
+  .stream-row {
+    grid-template-columns: 48px 12px 1fr;
+    gap: 8px; padding: 6px 0;
+  }
+  .stream-row .time { font-size: 11px; }
+  .stream-row .body {
+    padding: 10px 12px; gap: 8px;
+    flex-wrap: wrap; align-items: flex-start;
+  }
+  /* Hide avatar and reason chip — keep name + doctor only */
+  .stream-row .body > div:first-child { display: none; }
+  .stream-row .body .reason { display: none; }
+  .stream-row .body > div:nth-child(2) { flex: 1; min-width: 0; }
 }
 
 /* ── Tablet (641–900px) ────────────────────────────────────── */
