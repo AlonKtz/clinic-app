@@ -180,10 +180,9 @@ const Ic = {
 };
 
 // ── Dashboard (internal) ──────────────────────────────────────────────────────
-function Dashboard({ stream, doctorsList, counts }) {
+function Dashboard({ stream, doctorsList, counts, filter, setFilter }) {
   const upcoming = stream.find(s => s.status === 'next') || stream.find(s => s.status === 'wait') || null;
   const countdown = useCountdown(14);
-  const [filter, setFilter] = useState('TODAY');
   const today = new Date().toLocaleDateString('en-GB', { weekday: 'long', day: '2-digit', month: 'short' });
   const cap = Math.max(counts.appts + 4, 12);
 
@@ -347,7 +346,7 @@ function Dashboard({ stream, doctorsList, counts }) {
             <div className="stream-spine"/>
             {stream.length === 0 ? (
               <div style={{ padding: '24px', textAlign: 'center', fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--fg-3)', letterSpacing: '0.18em' }}>
-                NO APPOINTMENTS TODAY
+                NO APPOINTMENTS THIS {filter}
               </div>
             ) : stream.map((row, i) => (
               <div key={i} className={`stream-row ${row.status}`} style={{ animation: 'reveal-up 600ms var(--ease) backwards', animationDelay: `${0.4 + i * 0.05}s` }}>
@@ -392,36 +391,74 @@ function Dashboard({ stream, doctorsList, counts }) {
 }
 
 // ── DashboardView (default export) ────────────────────────────────────────────
-// Accepts raw Supabase data and computes stream / doctorsList / counts internally.
+// Accepts raw Supabase data; filter state lives here so it drives stream computation.
 export default function DashboardView({ appointments = [], doctors = [], patients = [] }) {
+  const [filter, setFilter] = useState('TODAY');
+
   const stream = useMemo(() => {
     const now = new Date();
-    const todayKey = now.toISOString().slice(0, 10);
-    const todays = appointments
-      .filter(a => a.dateTime.slice(0, 10) === todayKey)
-      .sort((a, b) => new Date(a.dateTime) - new Date(b.dateTime));
+
+    // Determine the window of appointments to show
+    let filtered;
+    if (filter === 'TODAY') {
+      const todayKey = now.toISOString().slice(0, 10);
+      filtered = appointments.filter(a => a.dateTime.slice(0, 10) === todayKey);
+    } else if (filter === 'WEEK') {
+      // Current ISO week: Monday 00:00 → Sunday 23:59
+      const dayOfWeek = (now.getDay() + 6) % 7; // Mon=0 … Sun=6
+      const monday = new Date(now);
+      monday.setDate(now.getDate() - dayOfWeek);
+      monday.setHours(0, 0, 0, 0);
+      const sunday = new Date(monday);
+      sunday.setDate(monday.getDate() + 7);
+      filtered = appointments.filter(a => {
+        const d = new Date(a.dateTime);
+        return d >= monday && d < sunday;
+      });
+    } else {
+      // MONTH — current calendar month
+      const year = now.getFullYear(), month = now.getMonth();
+      filtered = appointments.filter(a => {
+        const d = new Date(a.dateTime);
+        return d.getFullYear() === year && d.getMonth() === month;
+      });
+    }
+
+    filtered = [...filtered].sort((a, b) => new Date(a.dateTime) - new Date(b.dateTime));
+
     let nextSet = false;
-    return todays.map(a => {
+    return filtered.map(a => {
       const doc = doctors.find(d => d.licenseNumber === a.doctorLicense);
       const pat = patients.find(p => p.idNumber === a.patientId);
       const dt = new Date(a.dateTime);
       const past = dt < now;
       let status = 'wait';
-      if (past) {
-        status = 'done';
-      } else if (!nextSet) {
-        status = 'next';
-        nextSet = true;
+      if (past) { status = 'done'; }
+      else if (!nextSet) { status = 'next'; nextSet = true; }
+
+      // Time label: just HH:MM for today, weekday+time for week, date+time for month
+      let time;
+      if (filter === 'TODAY') {
+        time = dt.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' });
+      } else if (filter === 'WEEK') {
+        const day = dt.toLocaleDateString('he-IL', { weekday: 'short' });
+        const hm  = dt.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' });
+        time = `${day} ${hm}`;
+      } else {
+        const date = dt.toLocaleDateString('he-IL', { day: '2-digit', month: '2-digit' });
+        const hm   = dt.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' });
+        time = `${date} ${hm}`;
       }
+
       return {
-        time: dt.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' }),
+        time,
         name: pat?.patientName || '—',
         doc: doc?.doctorName || '—',
         reason: a.reason,
         status,
       };
     });
-  }, [appointments, doctors, patients]);
+  }, [appointments, doctors, patients, filter]);
 
   const doctorsList = useMemo(() =>
     doctors.map(d => ({
@@ -437,5 +474,5 @@ export default function DashboardView({ appointments = [], doctors = [], patient
     patients: patients.length,
   };
 
-  return <Dashboard stream={stream} doctorsList={doctorsList} counts={counts}/>;
+  return <Dashboard stream={stream} doctorsList={doctorsList} counts={counts} filter={filter} setFilter={setFilter}/>;
 }
