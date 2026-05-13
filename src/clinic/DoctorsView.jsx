@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { s, colors } from './styles';
+import { s, QF, colors } from './styles';
+import { DocIcon, IDIcon, CalIcon, PlusIcon, XIcon, SaveIcon, TrashIcon } from './icons';
 
 export default function DoctorsView({ doctors, appointments, onAdd, onDelete }) {
   const [open, setOpen] = useState(false);
@@ -38,13 +39,15 @@ export default function DoctorsView({ doctors, appointments, onAdd, onDelete }) 
       <div style={s.pageHeader}>
         <h2 style={s.h2}>רשימת רופאים</h2>
         <button onClick={() => setOpen(p => !p)} style={open ? s.cancelBtn : s.addBtn}>
-          {open ? '✕ ביטול' : '+ הוסף רופא'}
+          {open ? <><XIcon size={15} /> ביטול</> : <><PlusIcon size={15} /> הוסף רופא</>}
         </button>
       </div>
 
       {open && (
         <form onSubmit={handleSubmit} style={s.form}>
-          <h3 style={{ margin: '0 0 1rem', color: colors.primary, fontSize: '1rem' }}>➕ הוספת רופא חדש</h3>
+          <h3 style={{ margin: '0 0 1rem', color: QF.red500, fontSize: '1rem', display: 'flex', alignItems: 'center', gap: 8 }}>
+            <PlusIcon size={16} /> הוספת רופא חדש
+          </h3>
           <div style={s.grid2}>
             <div>
               <label style={s.label}>שם הרופא</label>
@@ -68,15 +71,17 @@ export default function DoctorsView({ doctors, appointments, onAdd, onDelete }) 
               {errors.licenseNumber && <p style={s.errorText}>{errors.licenseNumber}</p>}
             </div>
           </div>
-          <button type='submit' style={s.submitBtn}>💾 שמור רופא</button>
+          <button type='submit' style={s.submitBtn}><SaveIcon size={15} /> שמור רופא</button>
         </form>
       )}
 
       {doctors.length === 0 ? (
         <div style={s.empty}>
-          <div style={{ fontSize: '2.5rem', marginBottom: '0.5rem' }}>👨‍⚕️</div>
-          <div>אין רופאים במערכת עדיין</div>
-          <div style={{ fontSize: '0.85rem', marginTop: '0.25rem' }}>לחץ על "הוסף רופא" כדי להתחיל</div>
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '0.75rem', opacity: 0.35 }}>
+            <DocIcon size={48} />
+          </div>
+          <div style={{ fontWeight: 600 }}>אין רופאים במערכת עדיין</div>
+          <div style={{ fontSize: '0.85rem', marginTop: '0.25rem', color: QF.fg3 }}>לחץ על "הוסף רופא" כדי להתחיל</div>
         </div>
       ) : (
         <div style={s.stack}>
@@ -84,25 +89,36 @@ export default function DoctorsView({ doctors, appointments, onAdd, onDelete }) 
             const count = appointments.filter(a => a.doctorLicense === doc.licenseNumber).length;
             return (
               <div key={doc.licenseNumber} style={s.card}>
+                {/* Avatar */}
                 <div style={{
                   width: '44px', height: '44px', borderRadius: '50%',
-                  background: colors.primaryBg, display: 'flex', alignItems: 'center',
-                  justifyContent: 'center', fontSize: '1.4rem', flexShrink: 0,
-                }}>👨‍⚕️</div>
+                  background: QF.red50,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  color: QF.red500, flexShrink: 0,
+                }}>
+                  <DocIcon size={22} />
+                </div>
+
                 <div style={{ flex: 1 }}>
-                  <p style={{ margin: 0, fontWeight: 700, color: colors.text, fontSize: '0.95rem' }}>
+                  <p style={{ margin: 0, fontWeight: 700, color: QF.fg1, fontSize: '15px' }}>
                     {doc.doctorName}
                   </p>
-                  <p style={{ margin: '0.2rem 0 0', fontSize: '0.8rem', color: colors.textMuted, display: 'flex', gap: '0.75rem' }}>
-                    <span>🪪 רישיון: <strong>{doc.licenseNumber}</strong></span>
-                    <span>📅 {count} תורים</span>
+                  <p style={{ margin: '4px 0 0', fontSize: '12px', color: QF.fg3, display: 'flex', gap: '12px', alignItems: 'center' }}>
+                    <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                      <IDIcon size={13} /> {doc.licenseNumber}
+                    </span>
+                    <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                      <CalIcon size={13} /> {count} תורים
+                    </span>
                   </p>
                 </div>
-                <span style={s.badge(count > 0 ? colors.primaryBg : '#f1f5f9', count > 0 ? colors.primary : '#94a3b8')}>
+
+                <span style={s.badge(count > 0 ? QF.red50 : QF.surface2, count > 0 ? QF.red500 : QF.fg4)}>
                   {count} תורים
                 </span>
+
                 <button onClick={() => onDelete(doc.licenseNumber)} style={s.deleteBtn}>
-                  🗑️ מחק
+                  <TrashIcon size={14} /> מחק
                 </button>
               </div>
             );

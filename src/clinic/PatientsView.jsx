@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { s, colors } from './styles';
+import { s, QF, colors } from './styles';
+import { PatIcon, IDIcon, PhoneIcon, CalIcon, PlusIcon, XIcon, SaveIcon, TrashIcon } from './icons';
 
 export default function PatientsView({ patients, appointments, onAdd, onDelete }) {
   const [open, setOpen] = useState(false);
@@ -16,17 +17,13 @@ export default function PatientsView({ patients, appointments, onAdd, onDelete }
     const id = form.idNumber.trim();
     const name = form.patientName.trim();
     const phone = form.phoneNumber.trim();
-
     if (!id) e.idNumber = 'שדה חובה';
     else if (!/^\d{9}$/.test(id)) e.idNumber = 'תעודת זהות חייבת להכיל בדיוק 9 ספרות';
     else if (patients.find(p => p.idNumber === id)) e.idNumber = 'תעודת זהות כבר קיימת במערכת';
-
     if (!name) e.patientName = 'שדה חובה';
     else if (name.length < 2) e.patientName = 'שם חייב להכיל לפחות 2 תווים';
-
     if (!phone) e.phoneNumber = 'שדה חובה';
     else if (!/^0\d{8,9}$/.test(phone.replace(/[-\s]/g, ''))) e.phoneNumber = 'מספר טלפון לא תקין (לדוג׳: 0501234567)';
-
     return e;
   };
 
@@ -49,13 +46,15 @@ export default function PatientsView({ patients, appointments, onAdd, onDelete }
       <div style={s.pageHeader}>
         <h2 style={s.h2}>רשימת מטופלים</h2>
         <button onClick={() => setOpen(p => !p)} style={open ? s.cancelBtn : s.addBtn}>
-          {open ? '✕ ביטול' : '+ הוסף מטופל'}
+          {open ? <><XIcon size={15} /> ביטול</> : <><PlusIcon size={15} /> הוסף מטופל</>}
         </button>
       </div>
 
       {open && (
         <form onSubmit={handleSubmit} style={s.form}>
-          <h3 style={{ margin: '0 0 1rem', color: colors.primary, fontSize: '1rem' }}>➕ הוספת מטופל חדש</h3>
+          <h3 style={{ margin: '0 0 1rem', color: QF.red500, fontSize: '1rem', display: 'flex', alignItems: 'center', gap: 8 }}>
+            <PlusIcon size={16} /> הוספת מטופל חדש
+          </h3>
           <div style={s.grid3}>
             <div>
               <label style={s.label}>שם מלא</label>
@@ -90,15 +89,17 @@ export default function PatientsView({ patients, appointments, onAdd, onDelete }
               {errors.phoneNumber && <p style={s.errorText}>{errors.phoneNumber}</p>}
             </div>
           </div>
-          <button type='submit' style={s.submitBtn}>💾 שמור מטופל</button>
+          <button type='submit' style={s.submitBtn}><SaveIcon size={15} /> שמור מטופל</button>
         </form>
       )}
 
       {patients.length === 0 ? (
         <div style={s.empty}>
-          <div style={{ fontSize: '2.5rem', marginBottom: '0.5rem' }}>🧑</div>
-          <div>אין מטופלים במערכת עדיין</div>
-          <div style={{ fontSize: '0.85rem', marginTop: '0.25rem' }}>לחץ על "הוסף מטופל" כדי להתחיל</div>
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '0.75rem', opacity: 0.35 }}>
+            <PatIcon size={48} />
+          </div>
+          <div style={{ fontWeight: 600 }}>אין מטופלים במערכת עדיין</div>
+          <div style={{ fontSize: '0.85rem', marginTop: '0.25rem', color: QF.fg3 }}>לחץ על "הוסף מטופל" כדי להתחיל</div>
         </div>
       ) : (
         <div style={s.stack}>
@@ -106,26 +107,39 @@ export default function PatientsView({ patients, appointments, onAdd, onDelete }
             const count = appointments.filter(a => a.patientId === pat.idNumber).length;
             return (
               <div key={pat.idNumber} style={s.card}>
+                {/* Avatar */}
                 <div style={{
                   width: '44px', height: '44px', borderRadius: '50%',
-                  background: '#f0fdf4', display: 'flex', alignItems: 'center',
-                  justifyContent: 'center', fontSize: '1.4rem', flexShrink: 0,
-                }}>🧑</div>
+                  background: QF.successSoft,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  color: QF.success, flexShrink: 0,
+                }}>
+                  <PatIcon size={22} />
+                </div>
+
                 <div style={{ flex: 1 }}>
-                  <p style={{ margin: 0, fontWeight: 700, color: colors.text, fontSize: '0.95rem' }}>
+                  <p style={{ margin: 0, fontWeight: 700, color: QF.fg1, fontSize: '15px' }}>
                     {pat.patientName}
                   </p>
-                  <p style={{ margin: '0.2rem 0 0', fontSize: '0.8rem', color: colors.textMuted, display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
-                    <span>🪪 ת.ז.: <strong>{pat.idNumber}</strong></span>
-                    <span>📞 <strong>{pat.phoneNumber}</strong></span>
-                    <span>📅 {count} תורים</span>
+                  <p style={{ margin: '4px 0 0', fontSize: '12px', color: QF.fg3, display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
+                    <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                      <IDIcon size={13} /> {pat.idNumber}
+                    </span>
+                    <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                      <PhoneIcon size={13} /> {pat.phoneNumber}
+                    </span>
+                    <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                      <CalIcon size={13} /> {count} תורים
+                    </span>
                   </p>
                 </div>
-                <span style={s.badge(count > 0 ? '#f0fdf4' : '#f1f5f9', count > 0 ? colors.success : '#94a3b8')}>
+
+                <span style={s.badge(count > 0 ? QF.successSoft : QF.surface2, count > 0 ? QF.success : QF.fg4)}>
                   {count} תורים
                 </span>
+
                 <button onClick={() => onDelete(pat.idNumber)} style={s.deleteBtn}>
-                  🗑️ מחק
+                  <TrashIcon size={14} /> מחק
                 </button>
               </div>
             );

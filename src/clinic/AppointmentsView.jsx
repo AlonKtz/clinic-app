@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react';
-import { s, colors } from './styles';
+import { s, QF, colors } from './styles';
+import { DocIcon, PatIcon, CalIcon, ClockIcon, PhoneIcon, AlertIcon, PlusIcon, XIcon, SaveIcon, TrashIcon, FilterXIcon } from './icons';
 
 const REASONS = [
   'בדיקה שגרתית',
@@ -74,7 +75,7 @@ export default function AppointmentsView({ appointments, doctors, patients, onAd
   const selectStyle = (hasError) => ({
     ...s.input(hasError),
     appearance: 'none',
-    backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%2364748b' fill='none' stroke-width='1.5'/%3E%3C/svg%3E")`,
+    backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%238A6F6F' fill='none' stroke-width='1.5'/%3E%3C/svg%3E")`,
     backgroundRepeat: 'no-repeat',
     backgroundPosition: 'left 0.75rem center',
     paddingLeft: '2.25rem',
@@ -93,22 +94,31 @@ export default function AppointmentsView({ appointments, doctors, patients, onAd
           style={{ ...(open ? s.cancelBtn : s.addBtn), opacity: canAdd ? 1 : 0.5, cursor: canAdd ? 'pointer' : 'not-allowed' }}
           title={!canAdd ? 'יש להוסיף רופאים ומטופלים תחילה' : ''}
         >
-          {open ? '✕ ביטול' : '+ קבע תור'}
+          {open ? <><XIcon size={15} /> ביטול</> : <><PlusIcon size={15} /> קבע תור</>}
         </button>
       </div>
 
+      {/* Warning banner */}
       {(noDoctors || noPatients) && !open && (
-        <div style={{ background: '#fffbeb', border: '1px solid #fcd34d', borderRadius: '10px', padding: '0.85rem 1rem', marginBottom: '1rem', fontSize: '0.85rem', color: '#92400e' }}>
-          ⚠️ {noDoctors && noPatients ? 'יש להוסיף רופאים ומטופלים' : noDoctors ? 'יש להוסיף רופא תחילה' : 'יש להוסיף מטופל תחילה'} לפני קביעת תור.
+        <div style={{
+          background: QF.warningSoft, border: `1px solid ${QF.warning}`,
+          borderRadius: '10px', padding: '12px 16px', marginBottom: '1rem',
+          fontSize: '13px', color: '#92400e',
+          display: 'flex', alignItems: 'center', gap: '8px',
+        }}>
+          <AlertIcon size={16} />
+          {noDoctors && noPatients ? 'יש להוסיף רופאים ומטופלים' : noDoctors ? 'יש להוסיף רופא תחילה' : 'יש להוסיף מטופל תחילה'} לפני קביעת תור.
         </div>
       )}
 
+      {/* Add form */}
       {open && (
         <form onSubmit={handleSubmit} style={s.form}>
-          <h3 style={{ margin: '0 0 1rem', color: colors.primary, fontSize: '1rem' }}>📅 קביעת תור חדש</h3>
+          <h3 style={{ margin: '0 0 1rem', color: QF.red500, fontSize: '1rem', display: 'flex', alignItems: 'center', gap: 8 }}>
+            <CalIcon size={16} /> קביעת תור חדש
+          </h3>
 
           <div style={s.grid2}>
-            {/* Doctor */}
             <div>
               <label style={s.label}>רופא מקבל</label>
               <select style={selectStyle(errors.doctorLicense)} value={form.doctorLicense} onChange={e => set('doctorLicense', e.target.value)}>
@@ -121,7 +131,6 @@ export default function AppointmentsView({ appointments, doctors, patients, onAd
               </select>
               {errors.doctorLicense && <p style={s.errorText}>{errors.doctorLicense}</p>}
             </div>
-            {/* Patient */}
             <div>
               <label style={s.label}>מטופל קובע</label>
               <select style={selectStyle(errors.patientId)} value={form.patientId} onChange={e => set('patientId', e.target.value)}>
@@ -137,7 +146,6 @@ export default function AppointmentsView({ appointments, doctors, patients, onAd
           </div>
 
           <div style={{ ...s.grid2, marginTop: '1rem' }}>
-            {/* Date & Time */}
             <div>
               <label style={s.label}>תאריך ושעה</label>
               <input
@@ -149,7 +157,6 @@ export default function AppointmentsView({ appointments, doctors, patients, onAd
               />
               {errors.dateTime && <p style={s.errorText}>{errors.dateTime}</p>}
             </div>
-            {/* Reason */}
             <div>
               <label style={s.label}>סיבת ביקור</label>
               <select style={selectStyle(errors.reason)} value={form.reason} onChange={e => set('reason', e.target.value)}>
@@ -173,49 +180,55 @@ export default function AppointmentsView({ appointments, doctors, patients, onAd
             </div>
           )}
 
-          <button type='submit' style={s.submitBtn}>💾 שמור תור</button>
+          <button type='submit' style={s.submitBtn}><SaveIcon size={15} /> שמור תור</button>
         </form>
       )}
 
       {/* Filters */}
       {appointments.length > 0 && (
-        <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '1rem', flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', gap: '10px', marginBottom: '1rem', flexWrap: 'wrap' }}>
           <div style={{ flex: 1, minWidth: '160px' }}>
             <select
-              style={{ ...s.input(false), fontSize: '0.82rem', padding: '0.5rem 0.7rem' }}
+              style={{ ...s.input(false), fontSize: '13px', padding: '8px 12px' }}
               value={filterDoctor}
               onChange={e => setFilterDoctor(e.target.value)}
             >
-              <option value=''>👨‍⚕️ כל הרופאים</option>
+              <option value=''>כל הרופאים</option>
               {doctors.map(d => <option key={d.licenseNumber} value={d.licenseNumber}>{d.doctorName}</option>)}
             </select>
           </div>
           <div style={{ flex: 1, minWidth: '160px' }}>
             <select
-              style={{ ...s.input(false), fontSize: '0.82rem', padding: '0.5rem 0.7rem' }}
+              style={{ ...s.input(false), fontSize: '13px', padding: '8px 12px' }}
               value={filterPatient}
               onChange={e => setFilterPatient(e.target.value)}
             >
-              <option value=''>🧑 כל המטופלים</option>
+              <option value=''>כל המטופלים</option>
               {patients.map(p => <option key={p.idNumber} value={p.idNumber}>{p.patientName}</option>)}
             </select>
           </div>
           {(filterDoctor || filterPatient) && (
             <button
               onClick={() => { setFilterDoctor(''); setFilterPatient(''); }}
-              style={{ ...s.cancelBtn, fontSize: '0.82rem', padding: '0.5rem 0.75rem' }}
-            >✕ נקה סינון</button>
+              style={{ ...s.cancelBtn, fontSize: '13px', padding: '8px 14px' }}
+            >
+              <FilterXIcon size={14} /> נקה סינון
+            </button>
           )}
         </div>
       )}
 
-      {/* Appointment List */}
+      {/* List */}
       {filtered.length === 0 ? (
         <div style={s.empty}>
-          <div style={{ fontSize: '2.5rem', marginBottom: '0.5rem' }}>📅</div>
-          <div>{appointments.length === 0 ? 'אין תורים במערכת עדיין' : 'לא נמצאו תורים לפי הסינון הנבחר'}</div>
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '0.75rem', opacity: 0.35 }}>
+            <CalIcon size={48} />
+          </div>
+          <div style={{ fontWeight: 600 }}>
+            {appointments.length === 0 ? 'אין תורים במערכת עדיין' : 'לא נמצאו תורים לפי הסינון הנבחר'}
+          </div>
           {appointments.length === 0 && (
-            <div style={{ fontSize: '0.85rem', marginTop: '0.25rem' }}>לחץ על "קבע תור" כדי להתחיל</div>
+            <div style={{ fontSize: '0.85rem', marginTop: '0.25rem', color: QF.fg3 }}>לחץ על "קבע תור" כדי להתחיל</div>
           )}
         </div>
       ) : (
@@ -227,39 +240,52 @@ export default function AppointmentsView({ appointments, doctors, patients, onAd
             return (
               <div key={apt.appointmentNumber} style={{
                 ...s.card,
-                borderRight: `4px solid ${isPast ? '#94a3b8' : colors.primaryLight}`,
+                borderRight: `4px solid ${isPast ? QF.line2 : QF.red500}`,
                 opacity: isPast ? 0.75 : 1,
               }}>
-                {/* Appointment number badge */}
+                {/* Appointment number */}
                 <div style={{
                   width: '40px', height: '40px', borderRadius: '50%',
-                  background: isPast ? '#f1f5f9' : colors.primaryBg,
-                  color: isPast ? '#94a3b8' : colors.primary,
+                  background: isPast ? QF.surface2 : QF.red50,
+                  color: isPast ? QF.fg4 : QF.red500,
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontWeight: 700, fontSize: '0.85rem', flexShrink: 0,
+                  fontWeight: 700, fontSize: '13px', flexShrink: 0,
+                  fontFamily: "'JetBrains Mono', monospace",
                 }}>
                   #{apt.appointmentNumber}
                 </div>
 
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  {/* Date & Reason */}
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '0.3rem', flexWrap: 'wrap' }}>
-                    <span style={{ fontWeight: 700, color: colors.text, fontSize: '0.9rem' }}>
-                      🕐 {formatDateTime(apt.dateTime)}
+                  {/* Date + badges */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '5px', flexWrap: 'wrap' }}>
+                    <span style={{ fontWeight: 700, color: QF.fg1, fontSize: '14px', display: 'flex', alignItems: 'center', gap: 5 }}>
+                      <ClockIcon size={14} /> {formatDateTime(apt.dateTime)}
                     </span>
-                    {isPast && <span style={s.badge('#f1f5f9', '#94a3b8')}>עבר</span>}
-                    <span style={s.badge(colors.primaryBg, colors.primary)}>{apt.reason}</span>
+                    {isPast && (
+                      <span style={s.badge(QF.surface2, QF.fg4)}>עבר</span>
+                    )}
+                    <span style={s.badge(QF.red50, QF.red500)}>{apt.reason}</span>
                   </div>
                   {/* Doctor & Patient */}
-                  <div style={{ fontSize: '0.8rem', color: colors.textMuted, display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
-                    <span>👨‍⚕️ {doc ? doc.doctorName : <em style={{ color: colors.danger }}>רופא נמחק</em>}</span>
-                    <span>🧑 {pat ? pat.patientName : <em style={{ color: colors.danger }}>מטופל נמחק</em>}</span>
-                    {pat && <span>📞 {pat.phoneNumber}</span>}
+                  <div style={{ fontSize: '12px', color: QF.fg3, display: 'flex', gap: '14px', flexWrap: 'wrap', alignItems: 'center' }}>
+                    <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                      <DocIcon size={13} />
+                      {doc ? doc.doctorName : <em style={{ color: QF.danger }}>רופא נמחק</em>}
+                    </span>
+                    <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                      <PatIcon size={13} />
+                      {pat ? pat.patientName : <em style={{ color: QF.danger }}>מטופל נמחק</em>}
+                    </span>
+                    {pat && (
+                      <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                        <PhoneIcon size={13} /> {pat.phoneNumber}
+                      </span>
+                    )}
                   </div>
                 </div>
 
                 <button onClick={() => onDelete(apt.appointmentNumber)} style={s.deleteBtn}>
-                  🗑️ מחק
+                  <TrashIcon size={14} /> מחק
                 </button>
               </div>
             );
