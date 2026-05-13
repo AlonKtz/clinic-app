@@ -1,150 +1,126 @@
-import { useState } from 'react';
-import { s, QF, colors } from './styles';
-import { PatIcon, IDIcon, PhoneIcon, CalIcon, PlusIcon, XIcon, SaveIcon, TrashIcon } from './icons';
+// QFlow OS v2 — Patients view (ES module)
+import { useState, useMemo } from 'react';
+import { Field, Modal, EmptyState, Search, PageHead, initials } from './shared';
 
-export default function PatientsView({ patients, appointments, onAdd, onDelete }) {
-  const [open, setOpen] = useState(false);
-  const [form, setForm] = useState({ idNumber: '', patientName: '', phoneNumber: '' });
-  const [errors, setErrors] = useState({});
+function PatientForm({ existing, onSave, onCancel }) {
+  const [f, setF] = useState({ idNumber: '', patientName: '', phoneNumber: '' });
+  const [errs, setErrs] = useState({});
+  const set = (k, v) => { setF(p => ({ ...p, [k]: v })); if (errs[k]) setErrs(p => ({ ...p, [k]: null })); };
 
-  const set = (field, val) => {
-    setForm(p => ({ ...p, [field]: val }));
-    if (errors[field]) setErrors(p => ({ ...p, [field]: null }));
-  };
-
-  const validate = () => {
-    const e = {};
-    const id = form.idNumber.trim();
-    const name = form.patientName.trim();
-    const phone = form.phoneNumber.trim();
-    if (!id) e.idNumber = 'שדה חובה';
-    else if (!/^\d{9}$/.test(id)) e.idNumber = 'תעודת זהות חייבת להכיל בדיוק 9 ספרות';
-    else if (patients.find(p => p.idNumber === id)) e.idNumber = 'תעודת זהות כבר קיימת במערכת';
-    if (!name) e.patientName = 'שדה חובה';
-    else if (name.length < 2) e.patientName = 'שם חייב להכיל לפחות 2 תווים';
-    if (!phone) e.phoneNumber = 'שדה חובה';
-    else if (!/^0\d{8,9}$/.test(phone.replace(/[-\s]/g, ''))) e.phoneNumber = 'מספר טלפון לא תקין (לדוג׳: 0501234567)';
-    return e;
-  };
-
-  const handleSubmit = (e) => {
+  const submit = (e) => {
     e.preventDefault();
-    const errs = validate();
-    if (Object.keys(errs).length) { setErrors(errs); return; }
-    onAdd({
-      idNumber: form.idNumber.trim(),
-      patientName: form.patientName.trim(),
-      phoneNumber: form.phoneNumber.trim(),
-    });
-    setForm({ idNumber: '', patientName: '', phoneNumber: '' });
-    setErrors({});
-    setOpen(false);
+    const er = {};
+    const id = f.idNumber.trim();
+    const nm = f.patientName.trim();
+    const ph = f.phoneNumber.trim();
+    if (!id) er.idNumber = 'שדה חובה';
+    else if (!/^\d{9}$/.test(id)) er.idNumber = 'תעודת זהות = 9 ספרות';
+    else if (existing.find(p => p.idNumber === id)) er.idNumber = 'ת.ז. כבר קיימת';
+    if (!nm) er.patientName = 'שדה חובה';
+    if (!ph) er.phoneNumber = 'שדה חובה';
+    else if (!/^0\d{8,9}$/.test(ph.replace(/[-\s]/g, ''))) er.phoneNumber = 'מספר טלפון לא תקין';
+    if (Object.keys(er).length) { setErrs(er); return; }
+    onSave({ idNumber: id, patientName: nm, phoneNumber: ph });
   };
 
   return (
-    <div>
-      <div style={s.pageHeader}>
-        <h2 style={s.h2}>רשימת מטופלים</h2>
-        <button onClick={() => setOpen(p => !p)} style={open ? s.cancelBtn : s.addBtn}>
-          {open ? <><XIcon size={15} /> ביטול</> : <><PlusIcon size={15} /> הוסף מטופל</>}
+    <form onSubmit={submit}>
+      <div className="grid3">
+        <Field label="שם מלא" error={errs.patientName}>
+          <input autoFocus value={f.patientName} onChange={e => set('patientName', e.target.value)} placeholder="ישראל ישראלי"/>
+        </Field>
+        <Field label="ת.ז. · 9 ספרות · PK" error={errs.idNumber}>
+          <input value={f.idNumber} maxLength={9} onChange={e => set('idNumber', e.target.value.replace(/\D/g, ''))} placeholder="123456789"/>
+        </Field>
+        <Field label="טלפון" error={errs.phoneNumber}>
+          <input value={f.phoneNumber} onChange={e => set('phoneNumber', e.target.value)} placeholder="0501234567"/>
+        </Field>
+      </div>
+      <div className="actions">
+        <button type="button" className="btn ghost" onClick={onCancel}>ביטול</button>
+        <button type="submit" className="btn primary">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M19 21V5a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v16l7-3 7 3z"/>
+          </svg>
+          הוסף מטופל
         </button>
       </div>
+    </form>
+  );
+}
 
-      {open && (
-        <form onSubmit={handleSubmit} style={s.form}>
-          <h3 style={{ margin: '0 0 1rem', color: QF.red500, fontSize: '1rem', display: 'flex', alignItems: 'center', gap: 8 }}>
-            <PlusIcon size={16} /> הוספת מטופל חדש
-          </h3>
-          <div style={s.grid3}>
-            <div>
-              <label style={s.label}>שם מלא</label>
-              <input
-                style={s.input(errors.patientName)}
-                placeholder='ישראל ישראלי'
-                value={form.patientName}
-                onChange={e => set('patientName', e.target.value)}
-                autoFocus
-              />
-              {errors.patientName && <p style={s.errorText}>{errors.patientName}</p>}
-            </div>
-            <div>
-              <label style={s.label}>תעודת זהות (PK — 9 ספרות)</label>
-              <input
-                style={s.input(errors.idNumber)}
-                placeholder='123456789'
-                maxLength={9}
-                value={form.idNumber}
-                onChange={e => set('idNumber', e.target.value.replace(/\D/g, ''))}
-              />
-              {errors.idNumber && <p style={s.errorText}>{errors.idNumber}</p>}
-            </div>
-            <div>
-              <label style={s.label}>מספר טלפון</label>
-              <input
-                style={s.input(errors.phoneNumber)}
-                placeholder='0501234567'
-                value={form.phoneNumber}
-                onChange={e => set('phoneNumber', e.target.value)}
-              />
-              {errors.phoneNumber && <p style={s.errorText}>{errors.phoneNumber}</p>}
-            </div>
-          </div>
-          <button type='submit' style={s.submitBtn}><SaveIcon size={15} /> שמור מטופל</button>
-        </form>
-      )}
+export default function PatientsView({ patients, appointments, onAdd, onDelete }) {
+  const [open, setOpen] = useState(false);
+  const [search, setSearch] = useState('');
 
-      {patients.length === 0 ? (
-        <div style={s.empty}>
-          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '0.75rem', opacity: 0.35 }}>
-            <PatIcon size={48} />
-          </div>
-          <div style={{ fontWeight: 600 }}>אין מטופלים במערכת עדיין</div>
-          <div style={{ fontSize: '0.85rem', marginTop: '0.25rem', color: QF.fg3 }}>לחץ על "הוסף מטופל" כדי להתחיל</div>
-        </div>
+  const filtered = useMemo(() => {
+    const q = search.trim();
+    return patients.filter(p => !q || (p.patientName + p.idNumber + p.phoneNumber).includes(q));
+  }, [patients, search]);
+
+  return (
+    <div className="reveal" style={{ animationDelay: '.05s' }}>
+      <PageHead
+        eyebrow="03 · PATIENTS"
+        title="רשימת מטופלים"
+        count={patients.length} countLabel="REGISTERED"
+        action={
+          <button className="btn primary" onClick={() => setOpen(true)} style={{ padding: '14px 22px', fontSize: 14 }}>
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round">
+              <path d="M12 5v14M5 12h14"/>
+            </svg>
+            הוסף מטופל
+          </button>
+        }
+      />
+
+      <div className="filter-bar">
+        <Search value={search} onChange={setSearch} placeholder="חפש מטופל לפי שם, ת.ז. או טלפון..."/>
+      </div>
+
+      {filtered.length === 0 ? (
+        <EmptyState
+          title="אין מטופלים במערכת"
+          sub="ADD A PATIENT TO BEGIN"
+          icon={<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>}
+        />
       ) : (
-        <div style={s.stack}>
-          {patients.map(pat => {
-            const count = appointments.filter(a => a.patientId === pat.idNumber).length;
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          {filtered.map((p, i) => {
+            const count = appointments.filter(a => a.patientId === p.idNumber).length;
             return (
-              <div key={pat.idNumber} style={s.card}>
-                {/* Avatar */}
-                <div style={{
-                  width: '44px', height: '44px', borderRadius: '50%',
-                  background: QF.successSoft,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  color: QF.success, flexShrink: 0,
-                }}>
-                  <PatIcon size={22} />
+              <div key={p.idNumber} className="list-row" style={{ animation: 'reveal-up 500ms var(--ease) backwards', animationDelay: `${i * 0.05}s` }}>
+                <div className="av teal">{initials(p.patientName)}</div>
+                <div className="body">
+                  <div className="name">{p.patientName}</div>
+                  <div className="meta">
+                    <span>ת.ז. <strong>{p.idNumber}</strong></span>
+                    <span className="sep">·</span>
+                    <span>טלפון <strong>{p.phoneNumber}</strong></span>
+                    <span className="sep">·</span>
+                    <span>{count} תורים</span>
+                  </div>
                 </div>
-
-                <div style={{ flex: 1 }}>
-                  <p style={{ margin: 0, fontWeight: 700, color: QF.fg1, fontSize: '15px' }}>
-                    {pat.patientName}
-                  </p>
-                  <p style={{ margin: '4px 0 0', fontSize: '12px', color: QF.fg3, display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
-                    <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                      <IDIcon size={13} /> {pat.idNumber}
-                    </span>
-                    <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                      <PhoneIcon size={13} /> {pat.phoneNumber}
-                    </span>
-                    <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                      <CalIcon size={13} /> {count} תורים
-                    </span>
-                  </p>
-                </div>
-
-                <span style={s.badge(count > 0 ? QF.successSoft : QF.surface2, count > 0 ? QF.success : QF.fg4)}>
-                  {count} תורים
-                </span>
-
-                <button onClick={() => onDelete(pat.idNumber)} style={s.deleteBtn}>
-                  <TrashIcon size={14} /> מחק
+                <span className="stat" style={count > 0 ? { background: 'var(--teal-soft)', color: 'var(--teal)', borderColor: 'rgba(0,229,199,0.4)' } : {}}>{count} APT</span>
+                <button className="btn icon" onClick={() => onDelete(p.idNumber)} title="מחק">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+                  </svg>
                 </button>
               </div>
             );
           })}
         </div>
+      )}
+
+      {open && (
+        <Modal title="הוספת מטופל חדש" sub="NEW PATIENT · REGISTER" onClose={() => setOpen(false)}>
+          <PatientForm
+            existing={patients}
+            onSave={p => { onAdd(p); setOpen(false); }}
+            onCancel={() => setOpen(false)}
+          />
+        </Modal>
       )}
     </div>
   );

@@ -1,124 +1,109 @@
+// QFlow OS v2 — Main app (ES module, Supabase wired)
 import { useState, useEffect, useCallback } from 'react';
+import DashboardView, { AuroraStage } from './clinic/DashboardView';
+import AppointmentsView from './clinic/AppointmentsView';
 import DoctorsView from './clinic/DoctorsView';
 import PatientsView from './clinic/PatientsView';
-import AppointmentsView from './clinic/AppointmentsView';
 import ERDView from './clinic/ERDView';
-import { QF, colors } from './clinic/styles';
-import { DocIcon, PatIcon, CalIcon, DBIcon } from './clinic/icons';
+import { useToasts, useConfirm } from './clinic/shared';
 import {
   getDoctors, addDoctor, deleteDoctor, deleteAppointmentsByDoctor,
   getPatients, addPatient, deletePatient, deleteAppointmentsByPatient,
   getAppointments, addAppointment, deleteAppointment,
 } from './utils/db';
 
-// ── QFlow logo mark (ECG waveform) ────────────────────────────────────────
-function LogoMark({ size = 44 }) {
+// ── Side navigation ───────────────────────────────────────────────────────────
+function SideNav({ tab, setTab }) {
+  const items = [
+    {
+      id: 'dashboard', label: 'Dashboard', he: 'לוח בקרה',
+      ic: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><rect x="3" y="3" width="8" height="8" rx="2"/><rect x="13" y="3" width="8" height="8" rx="2"/><rect x="3" y="13" width="8" height="8" rx="2"/><rect x="13" y="13" width="8" height="8" rx="2"/></svg>,
+    },
+    {
+      id: 'appointments', label: 'Appointments', he: 'תורים',
+      ic: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>,
+    },
+    {
+      id: 'doctors', label: 'Doctors', he: 'רופאים',
+      ic: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="11" cy="5" r="2"/><path d="M11 7v8a4 4 0 0 0 8 0V9M19 7v2"/></svg>,
+    },
+    {
+      id: 'patients', label: 'Patients', he: 'מטופלים',
+      ic: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>,
+    },
+    {
+      id: 'erd', label: 'ERD', he: 'ERD',
+      ic: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14c0 1.66 4.03 3 9 3s9-1.34 9-3V5"/><path d="M3 12c0 1.66 4.03 3 9 3s9-1.34 9-3"/></svg>,
+    },
+  ];
+
   return (
-    <div style={{
-      width: size, height: size, borderRadius: Math.round(size * 0.23),
-      background: QF.grad3d,
-      display: 'flex', alignItems: 'center', justifyContent: 'center',
-      boxShadow: QF.shadow2, position: 'relative', flexShrink: 0,
-    }}>
-      <span style={{
-        position: 'absolute', inset: -3, borderRadius: Math.round(size * 0.27),
-        border: `2px solid ${QF.red500}`, opacity: 0.4, pointerEvents: 'none',
-        animation: 'qf-pulse-ring 1.8s cubic-bezier(.22,1,.36,1) infinite',
-      }} />
-      <svg viewBox="0 0 32 32" width={size * 0.55} height={size * 0.55} fill="none"
-        stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M3 16h5l3-7 4 14 3-9 3 4h6"/>
-      </svg>
-    </div>
+    <nav className="sidenav">
+      {items.map(it => (
+        <button key={it.id} className={tab === it.id ? 'active' : ''} onClick={() => setTab(it.id)} title={it.label}>
+          {it.ic}
+          <span className="tip">{it.he}</span>
+        </button>
+      ))}
+    </nav>
   );
 }
 
-// ── Loading screen ────────────────────────────────────────────────────────
+// ── Loading spinner ───────────────────────────────────────────────────────────
 function LoadingScreen() {
   return (
     <div style={{
       minHeight: '100vh', display: 'flex', flexDirection: 'column',
       alignItems: 'center', justifyContent: 'center',
-      background: QF.bg, gap: '1rem', fontFamily: QF.font,
+      background: 'var(--bg)', gap: '1rem',
     }}>
       <div style={{
-        width: '48px', height: '48px', borderRadius: '50%',
-        border: `3px solid ${QF.red100}`,
-        borderTop: `3px solid ${QF.red500}`,
+        width: 48, height: 48, borderRadius: '50%',
+        border: '3px solid rgba(255,45,85,0.2)',
+        borderTop: '3px solid var(--red)',
         animation: 'qf-spin 0.8s linear infinite',
-      }} />
-      <p style={{ color: QF.fg3, fontSize: '14px', margin: 0, fontWeight: 500 }}>טוען נתונים...</p>
+      }}/>
+      <p style={{ color: 'var(--fg-3)', fontSize: 14, margin: 0, fontFamily: 'var(--font-mono)', letterSpacing: '0.12em' }}>
+        LOADING · QFlow OS
+      </p>
     </div>
   );
 }
 
-// ── Error screen ──────────────────────────────────────────────────────────
+// ── Error screen ──────────────────────────────────────────────────────────────
 function ErrorScreen({ message, onRetry }) {
   return (
     <div style={{
       minHeight: '100vh', display: 'flex', flexDirection: 'column',
       alignItems: 'center', justifyContent: 'center',
-      background: QF.bg, gap: '1rem', padding: '2rem', fontFamily: QF.font,
+      background: 'var(--bg)', gap: '1rem', padding: '2rem',
     }}>
       <div style={{
         width: 56, height: 56, borderRadius: '50%',
-        background: QF.dangerSoft, display: 'flex', alignItems: 'center', justifyContent: 'center',
-        color: QF.danger,
+        background: 'var(--red-soft)', display: 'flex', alignItems: 'center', justifyContent: 'center',
+        color: 'var(--red-bright)',
       }}>
-        <svg viewBox="0 0 24 24" width={28} height={28} fill="none"
-          stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+        <svg viewBox="0 0 24 24" width={28} height={28} fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round">
           <path d="M12 9v4M12 17h.01"/>
           <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
         </svg>
       </div>
-      <h2 style={{ margin: 0, color: QF.danger, fontFamily: QF.font }}>שגיאה בחיבור למסד הנתונים</h2>
-      <p style={{ color: QF.fg3, fontSize: '14px', textAlign: 'center', maxWidth: '400px', margin: 0 }}>
+      <h2 style={{ margin: 0, color: 'var(--red-bright)', fontFamily: 'var(--font-sans)' }}>שגיאה בחיבור למסד הנתונים</h2>
+      <p style={{ color: 'var(--fg-3)', fontSize: 14, textAlign: 'center', maxWidth: 400, margin: 0, fontFamily: 'var(--font-he)' }}>
         {message}
       </p>
       <button onClick={onRetry} style={{
-        background: QF.red500, color: '#fff', border: 'none',
-        borderRadius: '10px', padding: '10px 22px', fontWeight: 700,
-        fontSize: '14px', cursor: 'pointer', fontFamily: QF.font,
-        boxShadow: QF.shadow2,
+        background: 'var(--red)', color: '#fff', border: 'none',
+        borderRadius: 10, padding: '10px 22px', fontWeight: 700,
+        fontSize: 14, cursor: 'pointer', fontFamily: 'var(--font-sans)',
       }}>נסה שוב</button>
     </div>
   );
 }
 
-// ── Toast notification ────────────────────────────────────────────────────
-function Toast({ message, type, onClose }) {
-  useEffect(() => {
-    const t = setTimeout(onClose, 3000);
-    return () => clearTimeout(t);
-  }, [onClose]);
-
-  return (
-    <div style={{
-      position: 'fixed', bottom: '1.5rem', left: '50%', transform: 'translateX(-50%)',
-      background: type === 'error' ? QF.danger : QF.success,
-      color: '#fff', borderRadius: '10px', padding: '10px 20px',
-      fontSize: '14px', fontWeight: 600, zIndex: 9999,
-      boxShadow: QF.shadow3, fontFamily: QF.font,
-      animation: 'slideUp 0.2s ease', direction: 'rtl',
-      display: 'flex', alignItems: 'center', gap: '8px',
-    }}>
-      {type === 'error' ? '❌' : '✅'} {message}
-      <style>{`@keyframes slideUp { from { opacity:0; transform:translateX(-50%) translateY(12px); } to { opacity:1; transform:translateX(-50%) translateY(0); } }`}</style>
-    </div>
-  );
-}
-
-// ── Tab icon wrapper ──────────────────────────────────────────────────────
-const TABS = [
-  { id: 'appointments', label: 'תורים',   Icon: CalIcon, count: true },
-  { id: 'doctors',      label: 'רופאים',  Icon: DocIcon, count: true },
-  { id: 'patients',     label: 'מטופלים', Icon: PatIcon, count: true },
-  { id: 'erd',          label: 'ERD',     Icon: DBIcon,  count: false },
-];
-
-// ── Main App ──────────────────────────────────────────────────────────────
+// ── Main app ──────────────────────────────────────────────────────────────────
 export default function ClinicApp() {
-  const [tab, setTab] = useState('appointments');
+  const [tab, setTab] = useState('dashboard');
 
   const [doctors,      setDoctors]      = useState([]);
   const [patients,     setPatients]     = useState([]);
@@ -126,9 +111,9 @@ export default function ClinicApp() {
 
   const [loading, setLoading] = useState(true);
   const [error,   setError]   = useState(null);
-  const [toast,   setToast]   = useState(null);
 
-  const showToast = (message, type = 'success') => setToast({ message, type });
+  const [showToast, toastHost]   = useToasts();
+  const [confirm,   confirmNode] = useConfirm();
 
   const fetchAll = useCallback(async () => {
     setError(null);
@@ -144,7 +129,7 @@ export default function ClinicApp() {
 
   useEffect(() => { fetchAll(); }, [fetchAll]);
 
-  // ── Doctors ─────────────────────────────────────────────────────────────
+  // ── Doctors ────────────────────────────────────────────────────────────────
   const handleAddDoctor = async (doc) => {
     try {
       const created = await addDoctor(doc);
@@ -154,17 +139,18 @@ export default function ClinicApp() {
   };
 
   const handleDeleteDoctor = async (licenseNumber) => {
-    if (!window.confirm('למחוק רופא זה? כל התורים שלו יימחקו גם כן.')) return;
+    const ok = await confirm('למחוק רופא זה? כל התורים שלו יימחקו גם כן.');
+    if (!ok) return;
     try {
       await deleteAppointmentsByDoctor(licenseNumber);
       await deleteDoctor(licenseNumber);
       setDoctors(p => p.filter(d => d.licenseNumber !== licenseNumber));
       setAppointments(p => p.filter(a => a.doctorLicense !== licenseNumber));
-      showToast('הרופא נמחק');
+      showToast('הרופא נמחק', 'error');
     } catch (e) { showToast(e.message, 'error'); }
   };
 
-  // ── Patients ────────────────────────────────────────────────────────────
+  // ── Patients ───────────────────────────────────────────────────────────────
   const handleAddPatient = async (pat) => {
     try {
       const created = await addPatient(pat);
@@ -174,17 +160,18 @@ export default function ClinicApp() {
   };
 
   const handleDeletePatient = async (idNumber) => {
-    if (!window.confirm('למחוק מטופל זה? כל התורים שלו יימחקו גם כן.')) return;
+    const ok = await confirm('למחוק מטופל זה? כל התורים שלו יימחקו גם כן.');
+    if (!ok) return;
     try {
       await deleteAppointmentsByPatient(idNumber);
       await deletePatient(idNumber);
       setPatients(p => p.filter(pt => pt.idNumber !== idNumber));
       setAppointments(p => p.filter(a => a.patientId !== idNumber));
-      showToast('המטופל נמחק');
+      showToast('המטופל נמחק', 'error');
     } catch (e) { showToast(e.message, 'error'); }
   };
 
-  // ── Appointments ─────────────────────────────────────────────────────────
+  // ── Appointments ───────────────────────────────────────────────────────────
   const handleAddAppointment = async (apt) => {
     try {
       const created = await addAppointment(apt);
@@ -194,97 +181,26 @@ export default function ClinicApp() {
   };
 
   const handleDeleteAppointment = async (num) => {
-    if (!window.confirm('למחוק תור זה?')) return;
+    const ok = await confirm('למחוק תור זה?');
+    if (!ok) return;
     try {
       await deleteAppointment(num);
       setAppointments(p => p.filter(a => a.appointmentNumber !== num));
-      showToast('התור נמחק');
+      showToast('התור נמחק', 'error');
     } catch (e) { showToast(e.message, 'error'); }
   };
 
-  if (loading) return <LoadingScreen />;
-  if (error)   return <ErrorScreen message={error} onRetry={() => { setLoading(true); fetchAll(); }} />;
-
-  const counts = { appointments: appointments.length, doctors: doctors.length, patients: patients.length };
+  if (loading) return <LoadingScreen/>;
+  if (error)   return <ErrorScreen message={error} onRetry={() => { setLoading(true); fetchAll(); }}/>;
 
   return (
-    <div style={{ direction: 'rtl', minHeight: '100vh', background: QF.bg, fontFamily: QF.font }}>
-
-      {/* ── Header ────────────────────────────────────────────────────── */}
-      <header style={{
-        background: QF.grad3d,
-        color: '#fff',
-        padding: '0.85rem 1.5rem',
-        boxShadow: QF.shadow3,
-      }}>
-        <div style={{ maxWidth: '960px', margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-
-          {/* Logo + wordmark */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-            <LogoMark size={44} />
-            <div>
-              <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px' }}>
-                <h1 style={{ margin: 0, fontSize: '1.6rem', fontWeight: 800, letterSpacing: '-0.5px', color: '#fff' }}>QFlow</h1>
-                <span style={{ opacity: 0.78, fontSize: '0.8rem', fontWeight: 400, color: '#fff' }}>מערכת ניהול תורים</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Stat chips */}
-          <div style={{ display: 'flex', gap: '8px' }}>
-            {TABS.filter(t => t.count).map(t => (
-              <button key={t.id} onClick={() => setTab(t.id)} style={{
-                background: tab === t.id ? 'rgba(255,255,255,0.28)' : 'rgba(255,255,255,0.14)',
-                border: tab === t.id ? '1.5px solid rgba(255,255,255,0.5)' : '1.5px solid transparent',
-                borderRadius: '12px', padding: '6px 12px',
-                color: '#fff', cursor: 'pointer', fontFamily: QF.font,
-                display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px',
-                minWidth: '52px', transition: `all 220ms ${QF.ease}`,
-              }}>
-                <span style={{ opacity: 0.85, color: '#fff', display: 'flex' }}>
-                  <t.Icon size={18} />
-                </span>
-                <span style={{ fontSize: '1rem', fontWeight: 700, lineHeight: 1 }}>{counts[t.id]}</span>
-              </button>
-            ))}
-          </div>
-        </div>
-      </header>
-
-      {/* ── Tab Bar ───────────────────────────────────────────────────── */}
-      <nav style={{ background: QF.surface, borderBottom: `2px solid ${QF.line}`, boxShadow: QF.shadow1 }}>
-        <div style={{ maxWidth: '960px', margin: '0 auto', display: 'flex' }}>
-          {TABS.map(t => {
-            const active = tab === t.id;
-            return (
-              <button key={t.id} onClick={() => setTab(t.id)} style={{
-                padding: '13px 20px', border: 'none', background: 'none', cursor: 'pointer',
-                fontWeight: active ? 700 : 500, fontFamily: QF.font,
-                color: active ? QF.red500 : QF.fg3,
-                borderBottom: `3px solid ${active ? QF.red500 : 'transparent'}`,
-                fontSize: '14px', display: 'flex', alignItems: 'center', gap: '7px',
-                transition: `color 180ms ${QF.ease}, border-color 180ms ${QF.ease}`,
-              }}>
-                <span style={{ color: active ? QF.red500 : QF.fg4, display: 'flex' }}>
-                  <t.Icon size={16} />
-                </span>
-                <span>{t.label}</span>
-                {t.count && (
-                  <span style={{
-                    background: active ? QF.red50 : QF.surface2,
-                    color: active ? QF.red500 : QF.fg4,
-                    borderRadius: '999px', padding: '2px 8px',
-                    fontSize: '11px', fontWeight: 700,
-                  }}>{counts[t.id]}</span>
-                )}
-              </button>
-            );
-          })}
-        </div>
-      </nav>
-
-      {/* ── Content ───────────────────────────────────────────────────── */}
-      <main style={{ maxWidth: '960px', margin: '0 auto', padding: '1.5rem 1rem' }}>
+    <>
+      <AuroraStage/>
+      <SideNav tab={tab} setTab={setTab}/>
+      <div className="shell" data-tab={tab}>
+        {tab === 'dashboard' && (
+          <DashboardView appointments={appointments} doctors={doctors} patients={patients}/>
+        )}
         {tab === 'appointments' && (
           <AppointmentsView
             appointments={appointments} doctors={doctors} patients={patients}
@@ -303,20 +219,14 @@ export default function ClinicApp() {
             onAdd={handleAddPatient} onDelete={handleDeletePatient}
           />
         )}
-        {tab === 'erd' && <ERDView />}
-      </main>
-
-      {/* ── Footer ───────────────────────────────────────────────────── */}
-      <footer style={{
-        textAlign: 'center', padding: '1.25rem', color: QF.fg4,
-        fontSize: '13px', borderTop: `1px solid ${QF.line}`,
-        marginTop: '2rem', background: QF.surface, fontFamily: QF.font,
-      }}>
-        <span style={{ fontWeight: 700, color: QF.red500 }}>QFlow</span>
-        {' '}— מערכת ניהול תורים לקליניקה
-      </footer>
-
-      {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
-    </div>
+        {tab === 'erd' && (
+          <div className="glass" style={{ padding: 24 }}>
+            <ERDView/>
+          </div>
+        )}
+      </div>
+      {toastHost}
+      {confirmNode}
+    </>
   );
 }

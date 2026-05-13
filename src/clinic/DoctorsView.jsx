@@ -1,129 +1,122 @@
-import { useState } from 'react';
-import { s, QF, colors } from './styles';
-import { DocIcon, IDIcon, CalIcon, PlusIcon, XIcon, SaveIcon, TrashIcon } from './icons';
+// QFlow OS v2 — Doctors view (ES module)
+import { useState, useMemo } from 'react';
+import { Field, Modal, EmptyState, Search, PageHead, initials } from './shared';
 
-export default function DoctorsView({ doctors, appointments, onAdd, onDelete }) {
-  const [open, setOpen] = useState(false);
-  const [form, setForm] = useState({ licenseNumber: '', doctorName: '' });
-  const [errors, setErrors] = useState({});
+function DoctorForm({ existing, onSave, onCancel }) {
+  const [f, setF] = useState({ licenseNumber: '', doctorName: '' });
+  const [errs, setErrs] = useState({});
+  const set = (k, v) => { setF(p => ({ ...p, [k]: v })); if (errs[k]) setErrs(p => ({ ...p, [k]: null })); };
 
-  const set = (field, val) => {
-    setForm(p => ({ ...p, [field]: val }));
-    if (errors[field]) setErrors(p => ({ ...p, [field]: null }));
-  };
-
-  const validate = () => {
-    const e = {};
-    const license = form.licenseNumber.trim();
-    const name = form.doctorName.trim();
-    if (!license) e.licenseNumber = 'שדה חובה';
-    else if (!/^\d+$/.test(license)) e.licenseNumber = 'מספר רישיון חייב להכיל ספרות בלבד';
-    else if (doctors.find(d => d.licenseNumber === license)) e.licenseNumber = 'מספר רישיון כבר קיים במערכת';
-    if (!name) e.doctorName = 'שדה חובה';
-    else if (name.length < 2) e.doctorName = 'שם חייב להכיל לפחות 2 תווים';
-    return e;
-  };
-
-  const handleSubmit = (e) => {
+  const submit = (e) => {
     e.preventDefault();
-    const errs = validate();
-    if (Object.keys(errs).length) { setErrors(errs); return; }
-    onAdd({ licenseNumber: form.licenseNumber.trim(), doctorName: form.doctorName.trim() });
-    setForm({ licenseNumber: '', doctorName: '' });
-    setErrors({});
-    setOpen(false);
+    const er = {};
+    const lic = f.licenseNumber.trim();
+    const nm = f.doctorName.trim();
+    if (!lic) er.licenseNumber = 'שדה חובה';
+    else if (!/^\d+$/.test(lic)) er.licenseNumber = 'ספרות בלבד';
+    else if (existing.find(d => d.licenseNumber === lic)) er.licenseNumber = 'מספר רישיון כבר קיים';
+    if (!nm) er.doctorName = 'שדה חובה';
+    else if (nm.length < 2) er.doctorName = 'שם קצר מדי';
+    if (Object.keys(er).length) { setErrs(er); return; }
+    onSave({ licenseNumber: lic, doctorName: nm });
   };
 
   return (
-    <div>
-      <div style={s.pageHeader}>
-        <h2 style={s.h2}>רשימת רופאים</h2>
-        <button onClick={() => setOpen(p => !p)} style={open ? s.cancelBtn : s.addBtn}>
-          {open ? <><XIcon size={15} /> ביטול</> : <><PlusIcon size={15} /> הוסף רופא</>}
+    <form onSubmit={submit}>
+      <div className="grid2">
+        <Field label="שם הרופא" error={errs.doctorName}>
+          <input autoFocus value={f.doctorName} onChange={e => set('doctorName', e.target.value)} placeholder='ד״ר ישראל ישראלי'/>
+        </Field>
+        <Field label="מספר רישיון · PK" error={errs.licenseNumber}>
+          <input value={f.licenseNumber} onChange={e => set('licenseNumber', e.target.value)} placeholder="123456"/>
+        </Field>
+      </div>
+      <div className="actions">
+        <button type="button" className="btn ghost" onClick={onCancel}>ביטול</button>
+        <button type="submit" className="btn primary">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M19 21V5a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v16l7-3 7 3z"/>
+          </svg>
+          הוסף רופא
         </button>
       </div>
+    </form>
+  );
+}
 
-      {open && (
-        <form onSubmit={handleSubmit} style={s.form}>
-          <h3 style={{ margin: '0 0 1rem', color: QF.red500, fontSize: '1rem', display: 'flex', alignItems: 'center', gap: 8 }}>
-            <PlusIcon size={16} /> הוספת רופא חדש
-          </h3>
-          <div style={s.grid2}>
-            <div>
-              <label style={s.label}>שם הרופא</label>
-              <input
-                style={s.input(errors.doctorName)}
-                placeholder='ד"ר ישראל ישראלי'
-                value={form.doctorName}
-                onChange={e => set('doctorName', e.target.value)}
-                autoFocus
-              />
-              {errors.doctorName && <p style={s.errorText}>{errors.doctorName}</p>}
-            </div>
-            <div>
-              <label style={s.label}>מספר רישיון (PK — מזהה ייחודי)</label>
-              <input
-                style={s.input(errors.licenseNumber)}
-                placeholder='123456'
-                value={form.licenseNumber}
-                onChange={e => set('licenseNumber', e.target.value)}
-              />
-              {errors.licenseNumber && <p style={s.errorText}>{errors.licenseNumber}</p>}
-            </div>
-          </div>
-          <button type='submit' style={s.submitBtn}><SaveIcon size={15} /> שמור רופא</button>
-        </form>
-      )}
+export default function DoctorsView({ doctors, appointments, onAdd, onDelete }) {
+  const [open, setOpen] = useState(false);
+  const [search, setSearch] = useState('');
 
-      {doctors.length === 0 ? (
-        <div style={s.empty}>
-          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '0.75rem', opacity: 0.35 }}>
-            <DocIcon size={48} />
-          </div>
-          <div style={{ fontWeight: 600 }}>אין רופאים במערכת עדיין</div>
-          <div style={{ fontSize: '0.85rem', marginTop: '0.25rem', color: QF.fg3 }}>לחץ על "הוסף רופא" כדי להתחיל</div>
-        </div>
+  const filtered = useMemo(() => {
+    const q = search.trim();
+    return doctors.filter(d => !q || (d.doctorName + d.licenseNumber).includes(q));
+  }, [doctors, search]);
+
+  return (
+    <div className="reveal" style={{ animationDelay: '.05s' }}>
+      <PageHead
+        eyebrow="02 · DOCTORS"
+        title="צוות הרופאים"
+        count={doctors.length} countLabel="REGISTERED"
+        action={
+          <button className="btn primary" onClick={() => setOpen(true)} style={{ padding: '14px 22px', fontSize: 14 }}>
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round">
+              <path d="M12 5v14M5 12h14"/>
+            </svg>
+            הוסף רופא
+          </button>
+        }
+      />
+
+      <div className="filter-bar">
+        <Search value={search} onChange={setSearch} placeholder="חפש רופא לפי שם או מספר רישיון..."/>
+      </div>
+
+      {filtered.length === 0 ? (
+        <EmptyState
+          title="אין רופאים במערכת"
+          sub="ADD A DOCTOR TO BEGIN"
+          icon={<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><circle cx="11" cy="5" r="2"/><path d="M11 7v8a4 4 0 0 0 8 0V9M19 7v2"/></svg>}
+        />
       ) : (
-        <div style={s.stack}>
-          {doctors.map(doc => {
-            const count = appointments.filter(a => a.doctorLicense === doc.licenseNumber).length;
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          {filtered.map((d, i) => {
+            const count = appointments.filter(a => a.doctorLicense === d.licenseNumber).length;
             return (
-              <div key={doc.licenseNumber} style={s.card}>
-                {/* Avatar */}
-                <div style={{
-                  width: '44px', height: '44px', borderRadius: '50%',
-                  background: QF.red50,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  color: QF.red500, flexShrink: 0,
-                }}>
-                  <DocIcon size={22} />
+              <div key={d.licenseNumber} className="list-row" style={{ animation: 'reveal-up 500ms var(--ease) backwards', animationDelay: `${i * 0.05}s` }}>
+                <div className="av">
+                  {initials(d.doctorName)}
+                  <span className="pulse"/>
                 </div>
-
-                <div style={{ flex: 1 }}>
-                  <p style={{ margin: 0, fontWeight: 700, color: QF.fg1, fontSize: '15px' }}>
-                    {doc.doctorName}
-                  </p>
-                  <p style={{ margin: '4px 0 0', fontSize: '12px', color: QF.fg3, display: 'flex', gap: '12px', alignItems: 'center' }}>
-                    <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                      <IDIcon size={13} /> {doc.licenseNumber}
-                    </span>
-                    <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                      <CalIcon size={13} /> {count} תורים
-                    </span>
-                  </p>
+                <div className="body">
+                  <div className="name">{d.doctorName}</div>
+                  <div className="meta">
+                    <span>רישיון <strong>#{d.licenseNumber}</strong></span>
+                    <span className="sep">·</span>
+                    <span>{count} תורים</span>
+                  </div>
                 </div>
-
-                <span style={s.badge(count > 0 ? QF.red50 : QF.surface2, count > 0 ? QF.red500 : QF.fg4)}>
-                  {count} תורים
-                </span>
-
-                <button onClick={() => onDelete(doc.licenseNumber)} style={s.deleteBtn}>
-                  <TrashIcon size={14} /> מחק
+                <span className="stat" style={count > 0 ? { background: 'var(--red-soft)', color: 'var(--red-bright)', borderColor: 'rgba(255,45,85,0.4)' } : {}}>{count} APT</span>
+                <button className="btn icon" onClick={() => onDelete(d.licenseNumber)} title="מחק">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+                  </svg>
                 </button>
               </div>
             );
           })}
         </div>
+      )}
+
+      {open && (
+        <Modal title="הוספת רופא חדש" sub="NEW DOCTOR · ADD TO ROSTER" onClose={() => setOpen(false)}>
+          <DoctorForm
+            existing={doctors}
+            onSave={d => { onAdd(d); setOpen(false); }}
+            onCancel={() => setOpen(false)}
+          />
+        </Modal>
       )}
     </div>
   );
