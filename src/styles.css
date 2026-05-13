@@ -773,10 +773,10 @@ body {
   .stream-spine { display: none; }
   .stream-list { padding-right: 0; }
 
-  /* Stream rows: compact single-line layout */
+  /* Stream rows: compact layout — 1fr must stay first (= rightmost in RTL = body) */
   .stream-head { flex-wrap: wrap; gap: 6px; }
   .stream-row {
-    grid-template-columns: 48px 12px 1fr;
+    grid-template-columns: 1fr 14px 52px;
     gap: 8px; padding: 6px 0;
   }
   .stream-row .time { font-size: 11px; }
