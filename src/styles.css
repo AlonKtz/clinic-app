@@ -658,3 +658,129 @@ body {
 .search input::placeholder { color: var(--fg-3); }
 .search input:focus { border-color: var(--red); box-shadow: 0 0 0 4px var(--red-soft); background: var(--surface); }
 .search svg { position: absolute; left: 16px; top: 50%; transform: translateY(-50%); color: var(--fg-3); width: 16px; height: 16px; pointer-events: none; }
+
+/* ══════════════════════════════════════════════════════════════
+   RESPONSIVE — mobile-first overrides
+   ══════════════════════════════════════════════════════════════ */
+
+/* ── Desktop: nudge shell left so the right-side sidenav never overlaps ── */
+@media (min-width: 641px) {
+  .shell { padding-right: 80px; }
+}
+
+/* ── Mobile (≤ 640px) ──────────────────────────────────────── */
+@media (max-width: 640px) {
+
+  /* Shell */
+  .shell { padding: 14px 14px 88px; }
+
+  /* Topbar: hide EKG, tighten up */
+  .topbar { flex-wrap: wrap; gap: 10px; padding: 12px 14px; margin-bottom: 16px; }
+  .topbar .ekg-host { display: none; }
+  .topbar .vitals { border-left: none; padding-left: 0; gap: 10px; }
+
+  /* Brand smaller */
+  .brand .word { font-size: 17px; }
+  .brand .sub  { display: none; }
+  .brand .mark { width: 30px; height: 30px; border-radius: 9px; }
+  .brand .mark svg { width: 16px; height: 16px; }
+
+  /* Bento: collapse all cells to full width */
+  .bento {
+    grid-template-columns: 1fr 1fr;
+    grid-auto-rows: auto;
+    gap: 10px;
+  }
+  .cell.hero   { grid-column: span 2; grid-row: auto; min-height: 220px; }
+  .cell.next   { grid-column: span 2; grid-row: auto; min-height: 200px; }
+  .cell.kpi    { grid-column: span 1; grid-row: auto; min-height: 120px; }
+  .cell.duty   { grid-column: span 2; grid-row: auto; }
+  .cell.stream { grid-column: span 2; grid-row: auto; }
+
+  /* Hero big number smaller */
+  .kdisplay { font-size: 72px; }
+  .hero .big-num { gap: 8px; }
+
+  /* Next-up patient name smaller */
+  .next .patient-name { font-size: 28px; }
+
+  /* KPI numbers smaller */
+  .kpi .num { font-size: 38px; }
+
+  /* Page head title smaller */
+  .page-head h1 { font-size: 32px; }
+  .page-head { padding-bottom: 14px; }
+
+  /* List rows: tighten */
+  .list-row { gap: 8px; padding: 12px; }
+  .list-row .stat { display: none; }
+  .list-row .stat:last-of-type { display: flex; }
+
+  /* Sidenav → bottom tab bar */
+  .sidenav {
+    position: fixed; top: auto; bottom: 0; right: 0; left: 0;
+    transform: none;
+    flex-direction: row; justify-content: space-around;
+    border-radius: 20px 20px 0 0; padding: 6px 8px 10px;
+    border-bottom: none;
+    gap: 0;
+    /* leave room for iPhone home indicator */
+    padding-bottom: max(10px, env(safe-area-inset-bottom));
+  }
+  .sidenav button { width: 48px; height: 44px; border-radius: 12px; flex: 1; max-width: 72px; }
+  .sidenav button.active::before { display: none; }
+
+  /* Show label below icon on mobile */
+  .sidenav button { flex-direction: column; gap: 2px; font-size: 0; }
+  .sidenav .tip {
+    position: static; opacity: 1; transform: none;
+    background: transparent; border: none; border-radius: 0;
+    padding: 0; font-size: 9px; color: var(--fg-3);
+    pointer-events: none; box-shadow: none;
+    transition: color 180ms var(--ease);
+    white-space: nowrap; display: block;
+    letter-spacing: 0;
+  }
+  .sidenav .tip::after { display: none; }
+  .sidenav button:hover .tip { transform: none; }
+  .sidenav button.active .tip { color: #fff; }
+
+  /* Modal full-screen on mobile */
+  .modal-overlay { padding: 0; align-items: flex-end; }
+  .modal {
+    max-width: 100%; width: 100%; border-radius: 22px 22px 0 0;
+    max-height: 92dvh; overflow-y: auto;
+  }
+
+  /* Grid inside modal: single column */
+  .modal .grid2, .modal .grid3 { grid-template-columns: 1fr; }
+
+  /* Filter bar stacks */
+  .filter-bar { flex-direction: column; gap: 8px; }
+  .filter-bar .field { max-width: 100%; }
+  .search { min-width: 0; }
+
+  /* Page head action button smaller */
+  .page-head .btn { padding: 10px 16px; font-size: 13px; }
+
+  /* Empty state padding */
+  .empty { padding: 40px 20px; }
+
+  /* Duty row: horizontal scroll on mobile */
+  .duty-row { overflow-x: auto; padding-bottom: 4px; -webkit-overflow-scrolling: touch; }
+
+  /* Stream list: no spine on mobile */
+  .stream-spine { display: none; }
+  .stream-list { padding-right: 0; }
+}
+
+/* ── Tablet (641–900px) ────────────────────────────────────── */
+@media (min-width: 641px) and (max-width: 900px) {
+  .shell { padding: 18px 18px 48px 18px; }
+  .topbar .ekg-host { max-width: 200px; }
+  .cell.hero  { grid-column: span 6; }
+  .cell.next  { grid-column: span 6; }
+  .cell.kpi   { grid-column: span 4; }
+  .kdisplay   { font-size: 80px; }
+  .page-head h1 { font-size: 40px; }
+}
