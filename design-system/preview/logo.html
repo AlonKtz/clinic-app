@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="he"><head><meta charset="UTF-8"><link rel="stylesheet" href="../colors_and_type.css">
+<style>
+  body{margin:0;padding:24px;background:var(--qf-bg);font-family:var(--qf-font-sans);color:var(--qf-fg-1);}
+  .lockup{display:flex;align-items:center;gap:14px;}
+  .mark{width:60px;height:60px;border-radius:14px;background:var(--qf-grad-brand-3d);display:flex;align-items:center;justify-content:center;box-shadow:var(--qf-shadow-2);position:relative;}
+  .mark::after{content:'';position:absolute;inset:-4px;border-radius:18px;border:2px solid var(--qf-red-500);opacity:.4;animation:qf-pulse-ring 1.8s var(--qf-ease-out) infinite;}
+  .mark svg{width:32px;height:32px;color:#fff;}
+  .word{font-size:42px;font-weight:800;letter-spacing:-0.025em;line-height:1;}
+  .sub{font-size:13px;color:var(--qf-fg-3);font-weight:500;margin-top:4px;}
+</style></head>
+<body>
+  <div class="lockup">
+    <div class="mark">
+      <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M3 16h5l3-7 4 14 3-9 3 4h6"/>
+      </svg>
+    </div>
+    <div>
+      <div class="word">QFlow</div>
+      <div class="sub">מערכת ניהול תורים · By Alon &amp; Afik</div>
+    </div>
+  </div>
+</body></html>

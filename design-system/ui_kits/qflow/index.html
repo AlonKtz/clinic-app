@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<title>QFlow — UI Kit</title>
+<link rel="stylesheet" href="../../colors_and_type.css">
+<style>
+  body{margin:0;background:var(--qf-bg);font-family:var(--qf-font-sans);color:var(--qf-fg-1);}
+  @keyframes qf-fade-in { from { opacity:0; transform: translateY(-4px); } to { opacity:1; transform:none; } }
+</style>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel" src="primitives.jsx"></script>
+<script type="text/babel" src="Header.jsx"></script>
+<script type="text/babel" src="Views.jsx"></script>
+<script type="text/babel">
+const SEED_DOCTORS = [
+  {licenseNumber:'54321', doctorName:'ד״ר יעל כהן'},
+  {licenseNumber:'67890', doctorName:'ד״ר משה לוי'},
+  {licenseNumber:'11223', doctorName:'ד״ר רחל גולדברג'},
+  {licenseNumber:'44556', doctorName:'ד״ר אבי שפירא'},
+];
+const SEED_PATIENTS = [
+  {idNumber:'123456789', patientName:'דנה אברהם', phoneNumber:'052-1234567'},
+  {idNumber:'234567891', patientName:'יוסי מזרחי', phoneNumber:'053-1234567'},
+  {idNumber:'345678902', patientName:'מרים כהן', phoneNumber:'054-1234567'},
+  {idNumber:'456789013', patientName:'אורן לוי', phoneNumber:'052-1111222'},
+  {idNumber:'567890124', patientName:'שירה ברק', phoneNumber:'050-3333444'},
+  {idNumber:'678901235', patientName:'נועם גוטמן', phoneNumber:'054-4444555'},
+];
+const SEED_APPOINTMENTS = [
+  {appointmentNumber:101, dateTime:'2026-05-08T09:00', reason:'בדיקה שגרתית', doctorLicense:'54321', patientId:'123456789'},
+  {appointmentNumber:102, dateTime:'2026-05-08T10:30', reason:'בדיקות דם', doctorLicense:'67890', patientId:'234567891'},
+  {appointmentNumber:103, dateTime:'2026-05-09T08:30', reason:'כאבים / תלונות', doctorLicense:'11223', patientId:'345678902'},
+  {appointmentNumber:104, dateTime:'2026-05-12T14:00', reason:'ייעוץ', doctorLicense:'54321', patientId:'567890124'},
+  {appointmentNumber:105, dateTime:'2026-05-13T09:30', reason:'המשך טיפול', doctorLicense:'67890', patientId:'678901235'},
+  {appointmentNumber:106, dateTime:'2026-04-30T11:00', reason:'בדיקה שגרתית', doctorLicense:'11223', patientId:'123456789'},
+  {appointmentNumber:107, dateTime:'2026-05-15T10:00', reason:'בדיקות דם', doctorLicense:'54321', patientId:'234567891'},
+  {appointmentNumber:108, dateTime:'2026-05-14T16:00', reason:'מעקב טיפול', doctorLicense:'44556', patientId:'456789013'},
+];
+
+function Toast({message, type, onClose}) {
+  React.useEffect(() => { const t = setTimeout(onClose, 2800); return () => clearTimeout(t); }, [onClose]);
+  return (
+    <div style={{
+      position:'fixed', bottom:24, left:'50%', transform:'translateX(-50%)',
+      background: type==='error'?QF.danger:QF.success, color:'#fff',
+      borderRadius:12, padding:'10px 18px', fontSize:13, fontWeight:700,
+      zIndex:9999, boxShadow:QF.shadow3,
+      animation:'qf-fade-in 220ms cubic-bezier(.34,1.56,.64,1)',
+      direction:'rtl', display:'inline-flex', alignItems:'center', gap:8,
+    }}>
+      <span>{type==='error'?'❌':'✅'}</span>{message}
+    </div>
+  );
+}
+
+function App() {
+  const [tab, setTab] = React.useState('appointments');
+  const [doctors, setDoctors] = React.useState(SEED_DOCTORS);
+  const [patients, setPatients] = React.useState(SEED_PATIENTS);
+  const [appts, setAppts] = React.useState(SEED_APPOINTMENTS);
+  const [toast, setToast] = React.useState(null);
+  const showToast = (m, t='success') => setToast({message:m, type:t});
+
+  return (
+    <div style={{direction:'rtl', minHeight:'100vh'}}>
+      <Header />
+      <Tabs tab={tab} setTab={setTab} />
+      <main style={{maxWidth:960, margin:'0 auto', padding:'24px 18px'}} data-screen-label={'01 ' + tab}>
+        {tab==='appointments' && (
+          <AppointmentsView appointments={appts} doctors={doctors} patients={patients}
+            onAdd={a=>{setAppts(p=>[...p,a]); showToast('התור נקבע בהצלחה');}}
+            onDelete={n=>{setAppts(p=>p.filter(x=>x.appointmentNumber!==n)); showToast('התור נמחק בהצלחה');}}
+          />
+        )}
+        {tab==='doctors' && (
+          <DoctorsView doctors={doctors} appointments={appts}
+            onDelete={l=>{setDoctors(p=>p.filter(d=>d.licenseNumber!==l)); showToast('הרופא נמחק בהצלחה');}}
+          />
+        )}
+        {tab==='patients' && (
+          <PatientsView patients={patients} appointments={appts}
+            onDelete={i=>{setPatients(p=>p.filter(pt=>pt.idNumber!==i)); showToast('המטופל נמחק בהצלחה');}}
+          />
+        )}
+        {tab==='erd' && (
+          <div style={{background:'#fff', border:`1px solid ${QF.line}`, borderRadius:14, padding:24, textAlign:'center', color:QF.fg3, fontSize:14}}>
+            דיאגרמת ERD — Chen Notation (תצוגה מלאה במערכת)
+          </div>
+        )}
+      </main>
+      <footer style={{textAlign:'center', padding:18, color:'#b08080', fontSize:12, borderTop:`1px solid ${QF.line}`, background:'#fff', marginTop:32}}>
+        <span style={{fontWeight:800, color:QF.red500}}>QFlow</span> — מערכת ניהול תורים לקליניקה · By Alon &amp; Afik
+      </footer>
+      {toast && <Toast {...toast} onClose={()=>setToast(null)} />}
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>

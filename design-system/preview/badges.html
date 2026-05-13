@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="he"><head><meta charset="UTF-8"><link rel="stylesheet" href="../colors_and_type.css">
+<style>
+  body{margin:0;padding:18px;background:var(--qf-bg);font-family:var(--qf-font-sans);color:var(--qf-fg-1);}
+  .row{display:flex;flex-wrap:wrap;gap:10px;align-items:center;}
+  .badge{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:4px 12px;font-size:12px;font-weight:700;}
+  .b1{background:var(--qf-primary-soft);color:var(--qf-primary);}
+  .b2{background:var(--qf-success-soft);color:var(--qf-success);}
+  .b3{background:var(--qf-warning-soft);color:#92400e;}
+  .b4{background:#f1f5f9;color:#64748b;}
+  .b5{background:var(--qf-violet-100);color:var(--qf-violet-500);}
+  .live::before{content:'';width:6px;height:6px;border-radius:50%;background:currentColor;animation:qf-pulse-soft 1.8s ease-in-out infinite;}
+  .head{font-weight:700;font-size:12px;color:var(--qf-fg-3);text-transform:uppercase;letter-spacing:.06em;margin:6px 0;}
+</style></head>
+<body>
+  <div class="head">Status badges</div>
+  <div class="row">
+    <span class="badge b1 live">תור פעיל</span>
+    <span class="badge b2">5 תורים</span>
+    <span class="badge b3">ממתין לאישור</span>
+    <span class="badge b4">עבר</span>
+    <span class="badge b5">קשר ERD</span>
+    <span class="badge b1">בדיקה שגרתית</span>
+    <span class="badge b1">מעקב טיפול</span>
+    <span class="badge b3">כאבים / תלונות</span>
+  </div>
+</body></html>

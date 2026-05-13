@@ -1,0 +1,186 @@
+/* ============================================================
+   QFlow Design System — Tokens
+   Clinic appointment management · Hebrew RTL · Medical/calm
+   ============================================================ */
+
+/* Heebo: Hebrew/Latin sans (substitution for Segoe UI; flag) */
+@import url('https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap');
+
+:root {
+  /* ── Brand · pulse red (evolved from #CC0000) ───────────────── */
+  --qf-red-50:  #FFF1F1;
+  --qf-red-100: #FFE0E0;
+  --qf-red-200: #FFC4C4;
+  --qf-red-300: #FF9090;
+  --qf-red-400: #F85959;
+  --qf-red-500: #E11D2C;   /* primary */
+  --qf-red-600: #C00C1F;   /* primary-strong */
+  --qf-red-700: #9B0518;
+  --qf-red-800: #6F0612;
+  --qf-red-900: #420009;
+
+  /* Brand alts (a calm clinical pair) */
+  --qf-mint-500:  #14B8A6;   /* success / vitals OK */
+  --qf-mint-100:  #CFFAF1;
+  --qf-amber-500: #F59E0B;   /* warning / waiting */
+  --qf-amber-100: #FEF3C7;
+  --qf-violet-500:#7C3AED;   /* relations / ERD accent */
+  --qf-violet-100:#EDE9FE;
+  --qf-blue-500:  #2563EB;   /* informational */
+
+  /* ── Neutrals · warm slate ──────────────────────────────────── */
+  --qf-bg:        #FBF7F7;   /* app bg, blush-tinted */
+  --qf-surface:   #FFFFFF;
+  --qf-surface-2: #FAF3F3;
+  --qf-line:      #EFE0E0;
+  --qf-line-2:    #E2D2D2;
+  --qf-fg-1:      #1A1414;   /* primary text */
+  --qf-fg-2:      #4D3838;   /* secondary text */
+  --qf-fg-3:      #8A6F6F;   /* muted/labels */
+  --qf-fg-4:      #B59A9A;   /* placeholder */
+
+  /* Semantic */
+  --qf-primary:        var(--qf-red-500);
+  --qf-primary-strong: var(--qf-red-600);
+  --qf-primary-soft:   var(--qf-red-50);
+  --qf-danger:         #B91C1C;
+  --qf-danger-soft:    #FEE2E2;
+  --qf-success:        var(--qf-mint-500);
+  --qf-success-soft:   var(--qf-mint-100);
+  --qf-warning:        var(--qf-amber-500);
+  --qf-warning-soft:   var(--qf-amber-100);
+
+  /* ── Type ───────────────────────────────────────────────────── */
+  --qf-font-sans: 'Heebo', 'Segoe UI', 'Arial Hebrew', system-ui, sans-serif;
+  --qf-font-mono: 'JetBrains Mono', ui-monospace, monospace;
+
+  --qf-fs-xs:   12px;
+  --qf-fs-sm:   13px;
+  --qf-fs-base: 15px;
+  --qf-fs-md:   17px;
+  --qf-fs-lg:   20px;
+  --qf-fs-xl:   24px;
+  --qf-fs-2xl:  32px;
+  --qf-fs-3xl:  44px;
+  --qf-fs-4xl:  60px;
+
+  --qf-lh-tight: 1.15;
+  --qf-lh-snug:  1.35;
+  --qf-lh-body:  1.55;
+
+  --qf-tracking-tight: -0.02em;
+  --qf-tracking-wide:  0.06em;
+
+  /* ── Spacing (4-pt) ─────────────────────────────────────────── */
+  --qf-s-1: 4px;
+  --qf-s-2: 8px;
+  --qf-s-3: 12px;
+  --qf-s-4: 16px;
+  --qf-s-5: 20px;
+  --qf-s-6: 24px;
+  --qf-s-8: 32px;
+  --qf-s-10: 40px;
+  --qf-s-12: 48px;
+  --qf-s-16: 64px;
+
+  /* ── Radii ──────────────────────────────────────────────────── */
+  --qf-r-1: 6px;
+  --qf-r-2: 10px;
+  --qf-r-3: 14px;
+  --qf-r-4: 20px;
+  --qf-r-pill: 999px;
+
+  /* ── Shadows · soft + subtle red tint for medical-warm feel ── */
+  --qf-shadow-1: 0 1px 2px rgba(180, 12, 31, 0.06);
+  --qf-shadow-2: 0 4px 14px rgba(180, 12, 31, 0.09), 0 1px 2px rgba(0,0,0,0.04);
+  --qf-shadow-3: 0 14px 40px rgba(180, 12, 31, 0.14), 0 2px 6px rgba(0,0,0,0.05);
+  --qf-shadow-glow: 0 0 0 6px rgba(225, 29, 44, 0.16), 0 8px 28px rgba(225, 29, 44, 0.28);
+
+  /* Inset (for pills/tabs) */
+  --qf-shadow-inset: inset 0 1px 0 rgba(255,255,255,0.6), inset 0 -1px 0 rgba(180,12,31,0.06);
+
+  /* ── Motion · "pulse" + smooth ease ─────────────────────────── */
+  --qf-ease-out:    cubic-bezier(0.22, 1, 0.36, 1);
+  --qf-ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --qf-dur-fast:    140ms;
+  --qf-dur-base:    220ms;
+  --qf-dur-slow:    420ms;
+  --qf-dur-pulse:   1800ms;
+
+  /* Gradients */
+  --qf-grad-brand:    linear-gradient(135deg, #9B0518 0%, #E11D2C 50%, #FF6B6B 100%);
+  --qf-grad-brand-3d: radial-gradient(120% 100% at 30% 20%, #FF7E7E 0%, #E11D2C 38%, #9B0518 78%, #420009 100%);
+  --qf-grad-blush:    linear-gradient(180deg, #FBF7F7 0%, #FFEDED 100%);
+}
+
+/* ── Semantic element styles ─────────────────────────────────── */
+.qf-h1, .qf h1 {
+  font-family: var(--qf-font-sans);
+  font-weight: 800;
+  font-size: var(--qf-fs-3xl);
+  line-height: var(--qf-lh-tight);
+  letter-spacing: var(--qf-tracking-tight);
+  color: var(--qf-fg-1);
+  margin: 0;
+}
+.qf-h2, .qf h2 {
+  font-family: var(--qf-font-sans);
+  font-weight: 700;
+  font-size: var(--qf-fs-2xl);
+  line-height: var(--qf-lh-tight);
+  letter-spacing: var(--qf-tracking-tight);
+  color: var(--qf-fg-1);
+  margin: 0;
+}
+.qf-h3, .qf h3 {
+  font-family: var(--qf-font-sans);
+  font-weight: 700;
+  font-size: var(--qf-fs-lg);
+  line-height: var(--qf-lh-snug);
+  color: var(--qf-fg-1);
+  margin: 0;
+}
+.qf-p, .qf p {
+  font-family: var(--qf-font-sans);
+  font-weight: 400;
+  font-size: var(--qf-fs-base);
+  line-height: var(--qf-lh-body);
+  color: var(--qf-fg-2);
+  margin: 0;
+}
+.qf-eyebrow {
+  font-family: var(--qf-font-sans);
+  font-weight: 600;
+  font-size: var(--qf-fs-xs);
+  text-transform: uppercase;
+  letter-spacing: var(--qf-tracking-wide);
+  color: var(--qf-fg-3);
+}
+.qf-mono, .qf code {
+  font-family: var(--qf-font-mono);
+  font-size: 0.92em;
+}
+
+/* ── Signature pulse + 3D motion primitives ──────────────────── */
+@keyframes qf-pulse-ring {
+  0%   { box-shadow: 0 0 0 0 rgba(225, 29, 44, 0.45); }
+  70%  { box-shadow: 0 0 0 14px rgba(225, 29, 44, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(225, 29, 44, 0); }
+}
+@keyframes qf-pulse-soft {
+  0%, 100% { transform: scale(1); }
+  50%      { transform: scale(1.04); }
+}
+@keyframes qf-float-3d {
+  0%, 100% { transform: perspective(800px) rotateX(0deg) translateY(0); }
+  50%      { transform: perspective(800px) rotateX(2deg) translateY(-4px); }
+}
+@keyframes qf-spin { to { transform: rotate(360deg); } }
+@keyframes qf-shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.qf-pulse       { animation: qf-pulse-ring var(--qf-dur-pulse) var(--qf-ease-out) infinite; }
+.qf-pulse-soft  { animation: qf-pulse-soft 2.4s var(--qf-ease-out) infinite; }
+.qf-float       { animation: qf-float-3d 4s ease-in-out infinite; }

@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="he"><head><meta charset="UTF-8"><link rel="stylesheet" href="../colors_and_type.css">
+<style>
+  body{margin:0;padding:18px;background:var(--qf-bg);font-family:var(--qf-font-sans);color:var(--qf-fg-1);}
+  .row{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:10px;}
+  button{font-family:inherit;font-weight:700;border:none;cursor:pointer;display:inline-flex;align-items:center;gap:6px;border-radius:10px;padding:10px 18px;font-size:14px;transition:all .22s cubic-bezier(.22,1,.36,1);}
+  .primary{background:var(--qf-red-500);color:#fff;box-shadow:var(--qf-shadow-2);}
+  .primary:hover{background:var(--qf-red-600);box-shadow:var(--qf-shadow-3);transform:translateY(-1px);}
+  .primary.glow{box-shadow:var(--qf-shadow-glow);}
+  .ghost{background:#f5eded;color:var(--qf-fg-2);}
+  .ghost:hover{background:var(--qf-line);}
+  .danger{background:var(--qf-danger-soft);color:var(--qf-danger);}
+  .outline{background:#fff;color:var(--qf-red-600);border:1.5px solid var(--qf-red-300);}
+  .icon{padding:10px;border-radius:10px;background:transparent;color:var(--qf-fg-3);}
+  .icon:hover{background:var(--qf-primary-soft);color:var(--qf-primary);}
+  .head{font-weight:700;font-size:12px;color:var(--qf-fg-3);text-transform:uppercase;letter-spacing:.06em;margin:6px 0;}
+  svg{width:16px;height:16px;}
+</style></head>
+<body>
+  <div class="head">Primary · ghost · danger · outline</div>
+  <div class="row">
+    <button class="primary glow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg> קבע תור</button>
+    <button class="primary"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M19 21V5a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v16l7-3 7 3z"/></svg> שמור תור</button>
+    <button class="ghost"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg> ביטול</button>
+    <button class="danger"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg> מחק</button>
+    <button class="outline">+ הוסף רופא</button>
+    <button class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+  </div>
+</body></html>

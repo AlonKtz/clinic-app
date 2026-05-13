@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="he"><head><meta charset="UTF-8"><link rel="stylesheet" href="../colors_and_type.css">
+<style>
+  body{margin:0;padding:18px;background:var(--qf-bg);font-family:var(--qf-font-sans);color:var(--qf-fg-1);}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+  .card{background:var(--qf-surface);border:1px solid var(--qf-line);border-radius:var(--qf-r-3);padding:14px 16px;box-shadow:var(--qf-shadow-1);}
+  .eyebrow{font-size:11px;color:var(--qf-fg-3);font-weight:600;letter-spacing:.06em;text-transform:uppercase;margin-bottom:6px;}
+  .he{font-size:20px;font-weight:700;color:var(--qf-fg-1);}
+  .ltr{direction:ltr;text-align:left;font-family:var(--qf-font-mono);font-size:13px;color:var(--qf-fg-2);margin-top:6px;}
+  .row{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:6px 0;border-bottom:1px dashed var(--qf-line);}
+  .row:last-child{border:none;}
+  .row .l{font-size:13px;color:var(--qf-fg-3);}
+  .row .v{font-family:var(--qf-font-mono);font-size:13px;color:var(--qf-fg-1);font-weight:600;}
+</style></head>
+<body>
+  <div class="grid">
+    <div class="card">
+      <div class="eyebrow">RTL · עברית</div>
+      <div class="he">ד״ר יעל כהן</div>
+      <div class="he" style="font-weight:500;font-size:15px;color:var(--qf-fg-2);margin-top:4px;">בדיקה שגרתית · יום שני, 09:00</div>
+      <div class="ltr">License #54321 · ID 123456789</div>
+    </div>
+    <div class="card">
+      <div class="eyebrow">Locale rules</div>
+      <div class="row"><span class="l">Locale</span><span class="v">he-IL</span></div>
+      <div class="row"><span class="l">Direction</span><span class="v">rtl</span></div>
+      <div class="row"><span class="l">Numerals</span><span class="v">Latin (0–9)</span></div>
+      <div class="row"><span class="l">Date format</span><span class="v">08/05/2026</span></div>
+      <div class="row"><span class="l">Stripes/borders</span><span class="v">border-right</span></div>
+    </div>
+  </div>
+</body></html>

@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="he"><head><meta charset="UTF-8"><link rel="stylesheet" href="../colors_and_type.css">
+<style>
+  body{margin:0;padding:18px;background:var(--qf-bg);font-family:var(--qf-font-sans);color:var(--qf-fg-1);}
+  .row{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;}
+  .b{background:var(--qf-surface);border:1px solid var(--qf-line);height:80px;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:4px;box-shadow:var(--qf-shadow-1);}
+  .px{font-family:var(--qf-font-mono);font-size:11px;color:var(--qf-fg-3);}
+  .nm{font-size:12px;font-weight:700;color:var(--qf-fg-1);}
+  .head{font-weight:700;font-size:13px;color:var(--qf-fg-2);margin-bottom:8px;}
+</style></head>
+<body>
+  <div class="head">Corner radii — input <code>10</code> · card <code>14</code> · modal <code>20</code></div>
+  <div class="row">
+    <div class="b" style="border-radius:6px"><div class="nm">r-1</div><div class="px">6 px</div></div>
+    <div class="b" style="border-radius:10px"><div class="nm">r-2</div><div class="px">10 px · input/btn</div></div>
+    <div class="b" style="border-radius:14px"><div class="nm">r-3</div><div class="px">14 px · card</div></div>
+    <div class="b" style="border-radius:20px"><div class="nm">r-4</div><div class="px">20 px · modal</div></div>
+    <div class="b" style="border-radius:999px"><div class="nm">pill</div><div class="px">999 px</div></div>
+  </div>
+</body></html>

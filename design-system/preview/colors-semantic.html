@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="he"><head><meta charset="UTF-8"><link rel="stylesheet" href="../colors_and_type.css">
+<style>
+  body{margin:0;padding:18px;background:var(--qf-bg);font-family:var(--qf-font-sans);color:var(--qf-fg-1);}
+  .head{font-weight:700;font-size:13px;color:var(--qf-fg-2);margin-bottom:10px;}
+  .row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;}
+  .pair{border-radius:var(--qf-r-2);overflow:hidden;border:1px solid var(--qf-line);background:#fff;}
+  .pair .top{height:46px;display:flex;align-items:center;padding:0 12px;color:#fff;font-weight:700;font-size:13px;gap:8px;}
+  .pair .bot{padding:8px 12px;background:var(--qf-surface);}
+  .pair .n{font-size:11px;color:var(--qf-fg-3);font-family:var(--qf-font-mono);}
+  .pair .l{font-size:13px;font-weight:600;color:var(--qf-fg-1);margin-bottom:2px;}
+  .dot{width:8px;height:8px;border-radius:50%;background:#fff;}
+  .pulse{animation:qf-pulse-soft 2.4s var(--qf-ease-out) infinite;}
+</style></head>
+<body>
+  <div class="head">Semantic colors — status, feedback, ERD</div>
+  <div class="row">
+    <div class="pair"><div class="top" style="background:var(--qf-primary)"><span class="dot pulse"></span>Primary</div><div class="bot"><div class="l">Pulse red</div><div class="n">#E11D2C · CTAs · live</div></div></div>
+    <div class="pair"><div class="top" style="background:var(--qf-success)">Success</div><div class="bot"><div class="l">Vital green</div><div class="n">#14B8A6 · saved · ok</div></div></div>
+    <div class="pair"><div class="top" style="background:var(--qf-warning)">Warning</div><div class="bot"><div class="l">Amber</div><div class="n">#F59E0B · waiting</div></div></div>
+    <div class="pair"><div class="top" style="background:var(--qf-danger)">Danger</div><div class="bot"><div class="l">Deep red</div><div class="n">#B91C1C · destructive</div></div></div>
+    <div class="pair"><div class="top" style="background:var(--qf-violet-500)">Relation</div><div class="bot"><div class="l">ERD violet</div><div class="n">#7C3AED · diagrams</div></div></div>
+    <div class="pair"><div class="top" style="background:var(--qf-blue-500)">Info</div><div class="bot"><div class="l">Clinical blue</div><div class="n">#2563EB · meta</div></div></div>
+    <div class="pair"><div class="top" style="background:var(--qf-mint-100);color:var(--qf-success)">Success soft</div><div class="bot"><div class="l">Mint chip</div><div class="n">#CFFAF1</div></div></div>
+    <div class="pair"><div class="top" style="background:var(--qf-warning-soft);color:#92400E">Warn soft</div><div class="bot"><div class="l">Amber chip</div><div class="n">#FEF3C7</div></div></div>
+  </div>
+</body></html>

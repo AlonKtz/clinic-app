@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="he"><head><meta charset="UTF-8"><link rel="stylesheet" href="../colors_and_type.css">
+<style>
+  body{margin:0;padding:18px;background:var(--qf-bg);font-family:var(--qf-font-sans);color:var(--qf-fg-1);}
+  .nav{background:#fff;border-bottom:1px solid var(--qf-line);padding:0 8px;display:flex;gap:0;border-radius:12px 12px 0 0;box-shadow:var(--qf-shadow-1);}
+  .tab{padding:14px 18px;font-size:13px;font-weight:600;color:var(--qf-fg-3);display:flex;align-items:center;gap:6px;cursor:pointer;border-bottom:3px solid transparent;transition:all .18s cubic-bezier(.22,1,.36,1);position:relative;}
+  .tab.active{color:var(--qf-primary);font-weight:800;border-bottom-color:var(--qf-primary);}
+  .chip{background:#f5eded;color:#b08080;border-radius:999px;padding:1px 8px;font-size:10px;font-weight:700;}
+  .tab.active .chip{background:var(--qf-primary-soft);color:var(--qf-primary);}
+  svg{width:16px;height:16px;}
+</style></head>
+<body>
+  <div class="nav">
+    <div class="tab active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>תורים <span class="chip">42</span></div>
+    <div class="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="5" r="2"/><path d="M11 7v8a4 4 0 0 0 8 0V9M19 7v2"/></svg>רופאים <span class="chip">12</span></div>
+    <div class="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>מטופלים <span class="chip">86</span></div>
+    <div class="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14a9 3 0 0 0 18 0V5"/></svg>ERD</div>
+  </div>
+</body></html>

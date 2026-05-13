@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="he"><head><meta charset="UTF-8"><link rel="stylesheet" href="../colors_and_type.css">
+<style>
+  body{margin:0;padding:18px;background:var(--qf-bg);font-family:var(--qf-font-sans);color:var(--qf-fg-1);}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+  .field label{display:block;font-size:11px;font-weight:600;color:var(--qf-fg-3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;}
+  .field input,.field select{width:100%;box-sizing:border-box;padding:10px 12px;border-radius:10px;border:1.5px solid var(--qf-line);background:#fff;font-size:14px;font-family:inherit;color:var(--qf-fg-1);outline:none;transition:border-color .15s,box-shadow .15s;}
+  .field input:focus,.field select:focus{border-color:var(--qf-red-400);box-shadow:0 0 0 4px rgba(225,29,44,.15);}
+  .field.err input{border-color:var(--qf-danger);background:#fff5f5;}
+  .field .e{font-size:11px;color:var(--qf-danger);margin-top:4px;}
+  .field .h{font-size:11px;color:var(--qf-fg-3);margin-top:4px;font-family:var(--qf-font-mono);}
+</style></head>
+<body>
+  <div class="grid">
+    <div class="field"><label>שם הרופא</label><input value="ד״ר יעל כהן"><div class="h">resting</div></div>
+    <div class="field"><label>מספר רישיון</label><input value="54321" style="border-color:var(--qf-red-400);box-shadow:0 0 0 4px rgba(225,29,44,.15);"><div class="h">focus</div></div>
+    <div class="field err"><label>תעודת זהות</label><input value="123"><div class="e">תעודת זהות חייבת להכיל בדיוק 9 ספרות</div></div>
+    <div class="field"><label>סיבת ביקור</label><select><option>בדיקה שגרתית</option></select><div class="h">select</div></div>
+  </div>
+</body></html>
