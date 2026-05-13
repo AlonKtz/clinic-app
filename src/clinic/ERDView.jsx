@@ -1,48 +1,49 @@
 import { useState, useRef } from 'react';
 
+// ── Dark-aurora color palette ─────────────────────────────────────────────────
 const C = {
-  entity:     '#AA0000', entityBg:   '#FFF0F0',
-  relation:   '#6d28d9', relationBg: '#EDE9FE',
-  attr:       '#0f766e', attrBg:     '#F0FDFA',
-  pk:         '#B91C1C', pkBg:       '#FEF2F2',
-  line:       '#CBD5E1', mainLine:   '#9B2020',
+  entity:     '#FF5577', entityBg:   'rgba(255,45,85,0.10)',
+  relation:   '#C58FFF', relationBg: 'rgba(197,143,255,0.10)',
+  attr:       '#00E5C7', attrBg:     'rgba(0,229,199,0.08)',
+  pk:         '#FFB454', pkBg:       'rgba(255,180,84,0.12)',
+  line:       'rgba(255,255,255,0.15)', mainLine: 'rgba(255,85,119,0.6)',
 };
-const FONT = "'Segoe UI', Arial, sans-serif";
+const FONT = "'Space Grotesk','Heebo',system-ui,sans-serif";
 
-/* ── Entity rectangle — pass isWeak for double border ── */
+/* ── Entity rectangle ─────────────────────────────────────── */
 function Entity({ cx, cy, label, fieldCount, w = 155, h = 62, isWeak = false }) {
   return (
     <g>
-      <rect x={cx - w/2} y={cy - h/2} width={w} height={h} rx={5}
-        fill={C.entityBg} stroke={C.entity} strokeWidth={2.5}
-        style={{ filter: 'drop-shadow(0 2px 6px rgba(170,0,0,0.12))' }} />
+      <rect x={cx - w/2} y={cy - h/2} width={w} height={h} rx={8}
+        fill={C.entityBg} stroke={C.entity} strokeWidth={2}
+        style={{ filter: 'drop-shadow(0 0 12px rgba(255,45,85,0.3))' }} />
       {isWeak && (
-        <rect x={cx - w/2 + 5} y={cy - h/2 + 5} width={w - 10} height={h - 10} rx={3}
-          fill="none" stroke={C.entity} strokeWidth={1.5} />
+        <rect x={cx - w/2 + 5} y={cy - h/2 + 5} width={w - 10} height={h - 10} rx={5}
+          fill="none" stroke={C.entity} strokeWidth={1} strokeDasharray="3 2" />
       )}
       <text x={cx} y={cy - 9} textAnchor="middle" dominantBaseline="middle"
-        fontSize={16} fontWeight="700" fill={C.entity} fontFamily={FONT}>
+        fontSize={15} fontWeight="700" fill={C.entity} fontFamily={FONT}>
         {label}
       </text>
       <text x={cx} y={cy + 13} textAnchor="middle" dominantBaseline="middle"
-        fontSize={10} fill="#9CA3AF" fontFamily={FONT}>
+        fontSize={10} fill="rgba(255,255,255,0.35)" fontFamily={FONT}>
         ({fieldCount} שדות)
       </text>
     </g>
   );
 }
 
-/* ── Relationship diamond — pass isIdentifying for double border ── */
+/* ── Relationship diamond ─────────────────────────────────── */
 function Relation({ cx, cy, label, hw = 66, hh = 40, isIdentifying = false }) {
   const pts  = `${cx},${cy-hh} ${cx+hw},${cy} ${cx},${cy+hh} ${cx-hw},${cy}`;
   const s    = 0.72;
   const ipts = `${cx},${cy-hh*s} ${cx+hw*s},${cy} ${cx},${cy+hh*s} ${cx-hw*s},${cy}`;
   return (
     <g>
-      <polygon points={pts} fill={C.relationBg} stroke={C.relation} strokeWidth={2.5}
-        style={{ filter: 'drop-shadow(0 2px 6px rgba(109,40,217,0.12))' }} />
+      <polygon points={pts} fill={C.relationBg} stroke={C.relation} strokeWidth={2}
+        style={{ filter: 'drop-shadow(0 0 10px rgba(197,143,255,0.3))' }} />
       {isIdentifying && (
-        <polygon points={ipts} fill="none" stroke={C.relation} strokeWidth={1.5} />
+        <polygon points={ipts} fill="none" stroke={C.relation} strokeWidth={1} strokeDasharray="3 2" />
       )}
       <text x={cx} y={cy} textAnchor="middle" dominantBaseline="middle"
         fontSize={13} fontWeight="700" fill={C.relation} fontFamily={FONT}>
@@ -52,14 +53,15 @@ function Relation({ cx, cy, label, hw = 66, hh = 40, isIdentifying = false }) {
   );
 }
 
-/* ── Attribute ellipse ── */
+/* ── Attribute ellipse ────────────────────────────────────── */
 function Attr({ cx, cy, label, isPK = false, rx = 65, ry = 22 }) {
   return (
     <g>
       <ellipse cx={cx} cy={cy} rx={rx} ry={ry}
         fill={isPK ? C.pkBg : C.attrBg}
         stroke={isPK ? C.pk : C.attr}
-        strokeWidth={isPK ? 2 : 1.5} />
+        strokeWidth={isPK ? 2 : 1.5}
+        style={{ filter: isPK ? 'drop-shadow(0 0 8px rgba(255,180,84,0.25))' : 'none' }} />
       <text x={cx} y={cy} textAnchor="middle" dominantBaseline="middle"
         fontSize={11} fontWeight={isPK ? '700' : '400'}
         fill={isPK ? C.pk : C.attr}
@@ -71,27 +73,28 @@ function Attr({ cx, cy, label, isPK = false, rx = 65, ry = 22 }) {
   );
 }
 
-/* ── Connector line ── */
+/* ── Connector line ───────────────────────────────────────── */
 function Line({ x1, y1, x2, y2, main = false }) {
   return (
     <line x1={x1} y1={y1} x2={x2} y2={y2}
       stroke={main ? C.mainLine : C.line}
-      strokeWidth={main ? 2 : 1.5} />
+      strokeWidth={main ? 2 : 1.5}
+      strokeDasharray={main ? 'none' : '4 3'} />
   );
 }
 
-/* ── Cardinality label (LTR forced) ── */
+/* ── Cardinality label ────────────────────────────────────── */
 function Cardinality({ x, y, label }) {
   return (
     <text x={x} y={y} textAnchor="middle" dominantBaseline="middle"
-      fontSize={11} fontWeight="700" fill="#DC2626" fontFamily={FONT}
+      fontSize={11} fontWeight="700" fill="#FFB454" fontFamily={FONT}
       direction="ltr" unicodeBidi="bidi-override">
       {label}
     </text>
   );
 }
 
-/* ── Geometry helpers ── */
+/* ── Geometry helpers ─────────────────────────────────────── */
 const lerp    = (a, b, t) => a + t * (b - a);
 const perpOff = (x1, y1, x2, y2, t, d) => {
   const dx = x2 - x1, dy = y2 - y1, len = Math.hypot(dx, dy);
@@ -101,16 +104,24 @@ const perpOff = (x1, y1, x2, y2, t, d) => {
   };
 };
 
-/* ── Cardinality legend items ── */
+/* ── Cardinality legend ───────────────────────────────────── */
 const CARD_LEGEND = [
-  { label: '(1,1)', desc: 'בדיוק אחד',       color: '#DC2626', bg: '#FEF2F2' },
-  { label: '(0,1)', desc: 'אופציונלי יחיד',   color: '#D97706', bg: '#FFFBEB' },
-  { label: '(1,N)', desc: 'לפחות אחד',        color: '#059669', bg: '#ECFDF5' },
-  { label: '(0,N)', desc: 'אופציונלי רבים',   color: '#6366F1', bg: '#EEF2FF' },
+  { label: '(1,1)', desc: 'בדיוק אחד',     color: '#FF5577', border: 'rgba(255,85,119,0.5)' },
+  { label: '(0,1)', desc: 'אופציונלי יחיד', color: '#FFB454', border: 'rgba(255,180,84,0.5)' },
+  { label: '(1,N)', desc: 'לפחות אחד',      color: '#00E5C7', border: 'rgba(0,229,199,0.5)'  },
+  { label: '(0,N)', desc: 'אופציונלי רבים', color: '#C58FFF', border: 'rgba(197,143,255,0.5)' },
 ];
 
+const BAR = {
+  background: 'rgba(255,255,255,0.04)',
+  border: '1px solid rgba(255,255,255,0.1)',
+  borderRadius: 12,
+  padding: '10px 16px',
+  marginBottom: 12,
+  backdropFilter: 'blur(10px)',
+};
+
 export default function ERDView() {
-  /* ── Pan state ── */
   const [pan, setPan]             = useState({ x: 0, y: 0 });
   const [isPanning, setIsPanning] = useState(false);
   const panStart                  = useRef({ x: 0, y: 0 });
@@ -131,7 +142,6 @@ export default function ERDView() {
   };
   const onMouseUp = () => setIsPanning(false);
 
-  /* ── Layout (shifted up ~25px vs. previous to better centre vertically) ── */
   const PAT  = { x: 220, y: 190 };
   const DOC  = { x: 740, y: 190 };
   const APT  = { x: 480, y: 420 };
@@ -148,65 +158,70 @@ export default function ERDView() {
   const AA_RS = { x: 660, y: 537 };
 
   return (
-    <div>
+    <div dir="rtl">
       {/* Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.85rem' }}>
-        <h2 style={{ margin: 0, color: '#1e293b', fontSize: '1.15rem', fontWeight: 700 }}>
-          ERD Diagram
-        </h2>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+        <div>
+          <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--fg-3)', letterSpacing: '0.2em', textTransform: 'uppercase', marginBottom: 4 }}>
+            04 · DATABASE
+          </div>
+          <h2 style={{ margin: 0, color: 'var(--fg)', fontSize: '1.4rem', fontWeight: 700, fontFamily: 'var(--font-sans)' }}>
+            ERD Diagram
+          </h2>
+        </div>
         <span style={{
-          background: '#FEF3C7', color: '#92400E', border: '1px solid #FCD34D',
-          borderRadius: '8px', padding: '0.25rem 0.65rem', fontSize: '0.75rem', fontWeight: 600,
+          background: 'rgba(255,180,84,0.12)', color: '#FFB454',
+          border: '1px solid rgba(255,180,84,0.3)',
+          borderRadius: 999, padding: '5px 14px',
+          fontSize: 12, fontWeight: 600, fontFamily: 'var(--font-mono)', letterSpacing: '0.1em',
         }}>
           3 ישויות · 2 קשרים · 8 תכונות
         </span>
       </div>
 
-      {/* Parking exclusion note */}
+      {/* Exclusion note */}
       <div style={{
-        background: '#FFFBEB', border: '1px solid #FCD34D', borderRadius: '10px',
-        padding: '0.6rem 0.9rem', marginBottom: '0.85rem',
-        fontSize: '0.8rem', color: '#92400E', display: 'flex', gap: '0.45rem',
+        ...BAR,
+        display: 'flex', gap: 8, alignItems: 'flex-start',
+        fontSize: 13, color: 'var(--fg-2)', fontFamily: 'var(--font-he)',
       }}>
-        <span>⚠️</span>
+        <span style={{ color: '#FFB454', flexShrink: 0 }}>⚠</span>
         <span>
-          <strong>גורם לא רלוונטי שהוצא מהמודל:</strong> תכונת <strong>חניה</strong> —
-          משאב ארגוני של המרפאה כולה, ולא מאפיין של רופא בודד.
+          <strong style={{ color: '#FFB454' }}>גורם לא רלוונטי שהוצא מהמודל:</strong>{' '}
+          תכונת <strong>חניה</strong> — משאב ארגוני של המרפאה כולה, ולא מאפיין של רופא בודד.
         </span>
       </div>
 
-      {/* ── Cardinality legend bar ── */}
-      <div style={{
-        display: 'flex', gap: '0.6rem', flexWrap: 'wrap', alignItems: 'center',
-        background: 'white', borderRadius: '10px', border: '1px solid #E5E7EB',
-        padding: '0.55rem 1rem', marginBottom: '0.85rem',
-      }}>
-        <span style={{ fontSize: '0.78rem', fontWeight: 700, color: '#374151', marginLeft: '0.25rem' }}>
+      {/* Cardinality legend */}
+      <div style={{ ...BAR, display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
+        <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--fg-3)', letterSpacing: '0.16em', textTransform: 'uppercase' }}>
           קרדינליות:
         </span>
-        {CARD_LEGEND.map(({ label, desc, color, bg }) => (
-          <div key={label} style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+        {CARD_LEGEND.map(({ label, desc, color, border }) => (
+          <div key={label} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
             <span style={{
-              background: bg, color, border: `1.5px solid ${color}`,
-              borderRadius: '999px', padding: '0.1rem 0.55rem',
-              fontSize: '0.75rem', fontWeight: 700, fontFamily: 'monospace',
+              background: color + '18', color, border: `1.5px solid ${border}`,
+              borderRadius: 999, padding: '2px 10px',
+              fontSize: 11, fontWeight: 700, fontFamily: 'var(--font-mono)',
               direction: 'ltr', display: 'inline-block',
-            }}>
-              {label}
-            </span>
-            <span style={{ fontSize: '0.75rem', color: '#64748B' }}>{desc}</span>
+            }}>{label}</span>
+            <span style={{ fontSize: 12, color: 'var(--fg-3)', fontFamily: 'var(--font-he)' }}>{desc}</span>
           </div>
         ))}
       </div>
 
-      {/* SVG canvas — pannable */}
+      {/* SVG canvas */}
       <div
         ref={containerRef}
         style={{
-          background: '#F9FAFB', borderRadius: '14px', border: '1px solid #E5E7EB',
-          boxShadow: '0 1px 6px rgba(0,0,0,0.06)', overflow: 'hidden',
+          background: 'rgba(6,8,15,0.6)',
+          borderRadius: 16,
+          border: '1px solid rgba(255,255,255,0.08)',
+          boxShadow: '0 0 40px rgba(255,45,85,0.06), inset 0 0 60px rgba(0,0,0,0.4)',
+          overflow: 'hidden',
           cursor: isPanning ? 'grabbing' : 'grab',
-          userSelect: 'none', height: '498px', position: 'relative',
+          userSelect: 'none', height: 498, position: 'relative',
+          backdropFilter: 'blur(10px)',
         }}
         onMouseDown={onMouseDown}
         onMouseMove={onMouseMove}
@@ -217,8 +232,8 @@ export default function ERDView() {
           style={{ display: 'block', transform: `translate(${pan.x}px, ${pan.y}px)`, transition: isPanning ? 'none' : 'transform 0.05s' }}>
 
           <defs>
-            <pattern id="dg" x="0" y="0" width="22" height="22" patternUnits="userSpaceOnUse">
-              <circle cx="1" cy="1" r="1" fill="#D1D5DB" opacity="0.5" />
+            <pattern id="dg" x="0" y="0" width="28" height="28" patternUnits="userSpaceOnUse">
+              <circle cx="1" cy="1" r="1" fill="rgba(255,255,255,0.06)" />
             </pattern>
           </defs>
           <rect width="980" height="610" fill="url(#dg)" />
@@ -245,12 +260,12 @@ export default function ERDView() {
           {(() => { const p = perpOff(DOC.x,DOC.y,   RECV.x,RECV.y, 0.22, -18); return <Cardinality key="c3" x={p.x} y={p.y} label="(0,N)" />; })()}
           {(() => { const p = perpOff(RECV.x,RECV.y, APT.x,APT.y,   0.48, -18); return <Cardinality key="c4" x={p.x} y={p.y} label="(1,1)" />; })()}
 
-          {/* Entities — תור is a weak entity (double border) */}
+          {/* Entities */}
           <Entity cx={PAT.x} cy={PAT.y} label="מטופל" fieldCount={3} />
           <Entity cx={DOC.x} cy={DOC.y} label="רופא"  fieldCount={2} />
           <Entity cx={APT.x} cy={APT.y} label="תור"   fieldCount={3} w={165} isWeak />
 
-          {/* Relationships — identifying (double diamond) because תור is weak */}
+          {/* Relationships */}
           <Relation cx={INV.x}  cy={INV.y}  label="מזמין" isIdentifying />
           <Relation cx={RECV.x} cy={RECV.y} label="מקבל"  isIdentifying />
 
@@ -265,40 +280,42 @@ export default function ERDView() {
           <Attr cx={AA_RS.x} cy={AA_RS.y} label="סיבת ביקור" />
 
           {/* Hint */}
-          <text x={480} y={24} textAnchor="middle" fontSize={10.5} fill="#9CA3AF" fontFamily={FONT}>
-            מפתח ראשי (PK) מסומן בקו תחתון · ישות חלשה = מסגרת כפולה · קשר מזהה = יהלום כפול
+          <text x={490} y={24} textAnchor="middle" fontSize={10} fill="rgba(255,255,255,0.2)" fontFamily={FONT}>
+            מפתח ראשי (PK) מסומן בקו תחתון · ישות חלשה = מסגרת מקווקוות · קשר מזהה = יהלום כפול
           </text>
         </svg>
       </div>
 
       {/* Shape legend */}
       <div style={{
-        display: 'flex', gap: '1.25rem', flexWrap: 'wrap', alignItems: 'center',
-        background: 'white', borderRadius: '10px', border: '1px solid #E5E7EB',
-        padding: '0.7rem 1rem', marginTop: '0.85rem', fontSize: '0.8rem', color: '#475569',
+        ...BAR, marginBottom: 0, marginTop: 12,
+        display: 'flex', gap: 18, flexWrap: 'wrap', alignItems: 'center',
+        fontSize: 12, color: 'var(--fg-3)', fontFamily: 'var(--font-he)',
       }}>
-        <span style={{ fontWeight: 700 }}>מקרא:</span>
+        <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--fg-3)', letterSpacing: '0.16em', textTransform: 'uppercase' }}>
+          מקרא:
+        </span>
         {[
-          { shape: 'rect',       color: C.entity,   bg: C.entityBg,   label: 'ישות חזקה' },
-          { shape: 'weakRect',   color: C.entity,   bg: C.entityBg,   label: 'ישות חלשה' },
-          { shape: 'diamond',    color: C.relation, bg: C.relationBg, label: 'קשר מזהה' },
-          { shape: 'ellipse',    color: C.attr,     bg: C.attrBg,     label: 'תכונה' },
-          { shape: 'ellipse',    color: C.pk,       bg: C.pkBg,       label: 'מפתח ראשי (PK)', isPK: true },
+          { shape: 'rect',     color: C.entity,   bg: C.entityBg,   label: 'ישות חזקה' },
+          { shape: 'weakRect', color: C.entity,   bg: C.entityBg,   label: 'ישות חלשה' },
+          { shape: 'diamond',  color: C.relation, bg: C.relationBg, label: 'קשר מזהה' },
+          { shape: 'ellipse',  color: C.attr,     bg: C.attrBg,     label: 'תכונה' },
+          { shape: 'ellipse',  color: C.pk,       bg: C.pkBg,       label: 'מפתח ראשי (PK)', isPK: true },
         ].map(({ shape, color, bg, label, isPK }) => (
-          <div key={label} style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+          <div key={label} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
             <svg width={36} height={26}>
-              {shape === 'rect'     && <rect    x={1}  y={5} width={34} height={16} rx={3} fill={bg} stroke={color} strokeWidth={2} />}
+              {shape === 'rect'     && <rect x={1} y={5} width={34} height={16} rx={4} fill={bg} stroke={color} strokeWidth={2} />}
               {shape === 'weakRect' && <>
-                <rect x={1}  y={5} width={34} height={16} rx={3} fill={bg} stroke={color} strokeWidth={2} />
-                <rect x={4}  y={8} width={28} height={10} rx={2} fill="none" stroke={color} strokeWidth={1.2} />
+                <rect x={1} y={5} width={34} height={16} rx={4} fill={bg} stroke={color} strokeWidth={2} />
+                <rect x={4} y={8} width={28} height={10} rx={2} fill="none" stroke={color} strokeWidth={1} strokeDasharray="2 1.5" />
               </>}
-              {shape === 'diamond'  && <>
+              {shape === 'diamond' && <>
                 <polygon points="18,1 35,13 18,25 1,13" fill={bg} stroke={color} strokeWidth={2} />
-                <polygon points="18,6 30,13 18,20 6,13" fill="none" stroke={color} strokeWidth={1.2} />
+                <polygon points="18,5 30,13 18,21 6,13" fill="none" stroke={color} strokeWidth={1} strokeDasharray="2 1.5" />
               </>}
-              {shape === 'ellipse'  && <ellipse cx={18} cy={13} rx={17} ry={11} fill={bg} stroke={color} strokeWidth={isPK ? 2 : 1.5} />}
+              {shape === 'ellipse' && <ellipse cx={18} cy={13} rx={17} ry={11} fill={bg} stroke={color} strokeWidth={isPK ? 2 : 1.5} />}
             </svg>
-            <span style={{ textDecoration: isPK ? 'underline' : 'none' }}>{label}</span>
+            <span style={{ color: 'var(--fg-2)', textDecoration: isPK ? 'underline' : 'none' }}>{label}</span>
           </div>
         ))}
       </div>
