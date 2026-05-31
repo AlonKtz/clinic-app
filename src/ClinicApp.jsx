@@ -1,19 +1,153 @@
 // QFlow OS v2 — Main app (ES module, Supabase wired)
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import DashboardView, { AuroraStage } from './clinic/DashboardView';
 import AppointmentsView from './clinic/AppointmentsView';
 import DoctorsView from './clinic/DoctorsView';
 import PatientsView from './clinic/PatientsView';
 import ERDView from './clinic/ERDView';
-import { useToasts, useConfirm } from './clinic/shared';
+import { useToasts, useConfirm, fmtDateTime } from './clinic/shared';
 import {
   getDoctors, addDoctor, deleteDoctor, deleteAppointmentsByDoctor,
   getPatients, addPatient, deletePatient, deleteAppointmentsByPatient,
   getAppointments, addAppointment, deleteAppointment,
 } from './utils/db';
 
+// ── Vitals counter (counts up from 0 with optional start delay) ───────────────
+function VitalsCounter({ to, delay = 0 }) {
+  const [n, setN] = useState(0);
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      const start = performance.now();
+      const dur = 1800;
+      let raf;
+      const step = (t) => {
+        const p = Math.min(1, (t - start) / dur);
+        const eased = 1 - Math.pow(1 - p, 4);
+        setN(Math.round(eased * to));
+        if (p < 1) raf = requestAnimationFrame(step);
+      };
+      raf = requestAnimationFrame(step);
+      return () => cancelAnimationFrame(raf);
+    }, delay);
+    return () => clearTimeout(timer);
+  }, [to, delay]);
+  return <>{String(n).padStart(2, '0')}</>;
+}
+
+// ── Clinic Vitals full-screen overlay ────────────────────────────────────────
+function VitalsScreen({ doctors, patients, appointments, onClose }) {
+  useEffect(() => {
+    const h = (e) => {
+      if (!['INPUT', 'SELECT', 'TEXTAREA'].includes(e.target.tagName)) onClose();
+    };
+    window.addEventListener('keydown', h);
+    return () => window.removeEventListener('keydown', h);
+  }, [onClose]);
+
+  const stats = [
+    { label: 'PATIENTS',     value: patients.length,     color: '#00E5C7', glow: 'rgba(0,229,199,0.5)',     delay: 0   },
+    { label: 'APPOINTMENTS', value: appointments.length,  color: '#FF5577', glow: 'rgba(255,45,85,0.6)',      delay: 320 },
+    { label: 'DOCTORS',      value: doctors.length,       color: '#C58FFF', glow: 'rgba(197,143,255,0.5)',    delay: 640 },
+  ];
+
+  // EKG path (same as dashboard)
+  const ekgPath = Array.from({ length: 8 }, (_, i) => {
+    const o = i * 120;
+    return `M${o} 30 L${o+30} 30 L${o+36} 30 L${o+40} 14 L${o+44} 46 L${o+48} 22 L${o+52} 30 L${o+120} 30`;
+  }).join(' ');
+
+  return (
+    <div
+      onClick={onClose}
+      style={{
+        position: 'fixed', inset: 0, zIndex: 300,
+        background: 'rgba(4,5,10,0.97)',
+        display: 'flex', flexDirection: 'column',
+        alignItems: 'center', justifyContent: 'center',
+        cursor: 'pointer',
+        animation: 'fade-in 400ms cubic-bezier(0.22,1,0.36,1)',
+      }}
+    >
+      {/* Brand */}
+      <div style={{
+        fontFamily: 'var(--font-mono)', fontSize: 11, letterSpacing: '0.45em',
+        color: 'rgba(255,255,255,0.25)', textTransform: 'uppercase', marginBottom: 64,
+        animation: 'reveal-up 700ms cubic-bezier(0.22,1,0.36,1) backwards',
+      }}>
+        QFlow · Clinic Operating System · v2
+      </div>
+
+      {/* Giant numbers */}
+      <div style={{ display: 'flex', gap: 72, alignItems: 'flex-start', direction: 'ltr' }}>
+        {stats.map(({ label, value, color, glow, delay }) => (
+          <div key={label} style={{
+            textAlign: 'center',
+            animation: `reveal-up 700ms cubic-bezier(0.22,1,0.36,1) ${delay + 100}ms backwards`,
+          }}>
+            <div style={{
+              fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: '0.35em',
+              color: 'rgba(255,255,255,0.35)', marginBottom: 16, textTransform: 'uppercase',
+            }}>
+              {label}
+            </div>
+            <div style={{
+              fontFamily: 'var(--font-sans)', fontWeight: 700,
+              fontSize: 'clamp(80px, 14vw, 180px)',
+              lineHeight: 1, letterSpacing: '-0.04em',
+              color, textShadow: `0 0 100px ${glow}, 0 0 40px ${glow}`,
+              fontVariantNumeric: 'tabular-nums',
+            }}>
+              <VitalsCounter to={value} delay={delay}/>
+            </div>
+            {/* Thin underline in color */}
+            <div style={{
+              height: 2, marginTop: 16, borderRadius: 2,
+              background: color, boxShadow: `0 0 16px ${glow}`,
+              animation: `vitals-bar 600ms cubic-bezier(0.22,1,0.36,1) ${delay + 400}ms backwards`,
+            }}/>
+          </div>
+        ))}
+      </div>
+
+      {/* EKG line */}
+      <div style={{ position: 'absolute', bottom: 72, left: 0, right: 0, height: 56, overflow: 'hidden', opacity: 0.7 }}>
+        <svg viewBox="0 0 960 60" preserveAspectRatio="none" style={{ width: '100%', height: '100%' }}>
+          <defs>
+            <linearGradient id="vGrad" x1="0" x2="1">
+              <stop offset="0"   stopColor="#FF2D55" stopOpacity="0"/>
+              <stop offset="0.3" stopColor="#FF2D55" stopOpacity="1"/>
+              <stop offset="0.7" stopColor="#FF5577" stopOpacity="1"/>
+              <stop offset="1"   stopColor="#FF2D55" stopOpacity="0"/>
+            </linearGradient>
+            <filter id="vGlow"><feGaussianBlur stdDeviation="3"/></filter>
+          </defs>
+          <path d={ekgPath} fill="none" stroke="url(#vGrad)" strokeWidth="3"
+            strokeLinecap="round" filter="url(#vGlow)">
+            <animateTransform attributeName="transform" type="translate"
+              from="0,0" to="-480,0" dur="3.6s" repeatCount="indefinite"/>
+          </path>
+          <path d={ekgPath} fill="none" stroke="#FFD0DA" strokeWidth="1.2" strokeLinecap="round">
+            <animateTransform attributeName="transform" type="translate"
+              from="0,0" to="-480,0" dur="3.6s" repeatCount="indefinite"/>
+          </path>
+        </svg>
+      </div>
+
+      {/* Dismiss hint */}
+      <div style={{
+        position: 'absolute', bottom: 28,
+        fontFamily: 'var(--font-mono)', fontSize: 9, letterSpacing: '0.28em',
+        color: 'rgba(255,255,255,0.15)', textTransform: 'uppercase',
+        animation: 'fade-in 1s 1.8s backwards',
+      }}>
+        CLICK OR PRESS ANY KEY TO CONTINUE
+      </div>
+    </div>
+  );
+}
+
 // ── Side navigation ───────────────────────────────────────────────────────────
-function SideNav({ tab, setTab }) {
+function SideNav({ tab, setTab, onVitals }) {
   const items = [
     {
       id: 'dashboard', label: 'Dashboard', he: 'לוח בקרה',
@@ -45,6 +179,21 @@ function SideNav({ tab, setTab }) {
           <span className="tip">{it.he}</span>
         </button>
       ))}
+      {/* Divider + Vitals button */}
+      <div style={{ height: 1, background: 'rgba(255,255,255,0.08)', margin: '4px 6px' }}/>
+      <button onClick={onVitals} title="Vitals — press V" style={{ position: 'relative' }}>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M3 12h4l3-8 4 16 3-8h4"/>
+        </svg>
+        <span className="tip">Vitals</span>
+        {/* pulsing dot */}
+        <span style={{
+          position: 'absolute', top: 8, right: 8,
+          width: 6, height: 6, borderRadius: '50%',
+          background: 'var(--red)', boxShadow: '0 0 8px var(--red-glow)',
+          animation: 'blip 1.6s infinite',
+        }}/>
+      </button>
     </nav>
   );
 }
@@ -103,7 +252,8 @@ function ErrorScreen({ message, onRetry }) {
 
 // ── Main app ──────────────────────────────────────────────────────────────────
 export default function ClinicApp() {
-  const [tab, setTab] = useState('dashboard');
+  const [tab, setTab]     = useState('dashboard');
+  const [vitals, setVitals] = useState(false);
 
   const [doctors,      setDoctors]      = useState([]);
   const [patients,     setPatients]     = useState([]);
@@ -114,6 +264,18 @@ export default function ClinicApp() {
 
   const [showToast, toastHost]   = useToasts();
   const [confirm,   confirmNode] = useConfirm();
+
+  // ── Keyboard shortcut: V → vitals ─────────────────────────────────────────
+  useEffect(() => {
+    const h = (e) => {
+      if ((e.key === 'v' || e.key === 'V') &&
+          !['INPUT', 'SELECT', 'TEXTAREA'].includes(e.target.tagName)) {
+        setVitals(v => !v);
+      }
+    };
+    window.addEventListener('keydown', h);
+    return () => window.removeEventListener('keydown', h);
+  }, []);
 
   const fetchAll = useCallback(async () => {
     setError(null);
@@ -139,14 +301,19 @@ export default function ClinicApp() {
   };
 
   const handleDeleteDoctor = async (licenseNumber) => {
-    const ok = await confirm('למחוק רופא זה? כל התורים שלו יימחקו גם כן.');
+    const doctor   = doctors.find(d => d.licenseNumber === licenseNumber);
+    const apptCount = appointments.filter(a => a.doctorLicense === licenseNumber).length;
+    const msg = apptCount > 0
+      ? `למחוק את ${doctor?.doctorName}?\n${apptCount} תורים קשורים יימחקו גם כן.`
+      : `למחוק את ${doctor?.doctorName}?`;
+    const ok = await confirm(msg);
     if (!ok) return;
     try {
       await deleteAppointmentsByDoctor(licenseNumber);
       await deleteDoctor(licenseNumber);
       setDoctors(p => p.filter(d => d.licenseNumber !== licenseNumber));
       setAppointments(p => p.filter(a => a.doctorLicense !== licenseNumber));
-      showToast('הרופא נמחק', 'error');
+      showToast(`${doctor?.doctorName} נמחק${apptCount > 0 ? ` · ${apptCount} תורים הוסרו` : ''}`, 'error');
     } catch (e) { showToast(e.message, 'error'); }
   };
 
@@ -160,23 +327,43 @@ export default function ClinicApp() {
   };
 
   const handleDeletePatient = async (idNumber) => {
-    const ok = await confirm('למחוק מטופל זה? כל התורים שלו יימחקו גם כן.');
+    const patient   = patients.find(p => p.idNumber === idNumber);
+    const apptCount = appointments.filter(a => a.patientId === idNumber).length;
+    const msg = apptCount > 0
+      ? `למחוק את ${patient?.patientName}?\n${apptCount} תורים קשורים יימחקו גם כן.`
+      : `למחוק את ${patient?.patientName}?`;
+    const ok = await confirm(msg);
     if (!ok) return;
     try {
       await deleteAppointmentsByPatient(idNumber);
       await deletePatient(idNumber);
       setPatients(p => p.filter(pt => pt.idNumber !== idNumber));
       setAppointments(p => p.filter(a => a.patientId !== idNumber));
-      showToast('המטופל נמחק', 'error');
+      showToast(`${patient?.patientName} נמחק/ה${apptCount > 0 ? ` · ${apptCount} תורים הוסרו` : ''}`, 'error');
     } catch (e) { showToast(e.message, 'error'); }
   };
 
   // ── Appointments ───────────────────────────────────────────────────────────
   const handleAddAppointment = async (apt) => {
+    // Guard: same doctor can't have two appointments within 30 minutes
+    const newDt = new Date(apt.dateTime);
+    const clash = appointments.find(a => {
+      if (a.doctorLicense !== apt.doctorLicense) return false;
+      return Math.abs(new Date(a.dateTime) - newDt) < 30 * 60 * 1000;
+    });
+    if (clash) {
+      const doc = doctors.find(d => d.licenseNumber === apt.doctorLicense);
+      showToast(
+        `ל${doc?.doctorName || 'רופא זה'} כבר יש תור בשעה ${fmtDateTime(clash.dateTime)}`,
+        'error'
+      );
+      return;
+    }
+
     try {
       const created = await addAppointment(apt);
       setAppointments(p => [...p, created].sort((a, b) => new Date(a.dateTime) - new Date(b.dateTime)));
-      showToast('התור נקבע בהצלחה');
+      showToast('התור נקבע בהצלחה ✓');
     } catch (e) { showToast(e.message, 'error'); }
   };
 
@@ -196,7 +383,7 @@ export default function ClinicApp() {
   return (
     <>
       <AuroraStage/>
-      <SideNav tab={tab} setTab={setTab}/>
+      <SideNav tab={tab} setTab={setTab} onVitals={() => setVitals(true)}/>
       <div className="shell" data-tab={tab}>
         {tab === 'dashboard' && (
           <DashboardView appointments={appointments} doctors={doctors} patients={patients}/>
@@ -227,6 +414,12 @@ export default function ClinicApp() {
       </div>
       {toastHost}
       {confirmNode}
+      {vitals && (
+        <VitalsScreen
+          doctors={doctors} patients={patients} appointments={appointments}
+          onClose={() => setVitals(false)}
+        />
+      )}
     </>
   );
 }

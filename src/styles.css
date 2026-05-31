@@ -634,6 +634,7 @@ body {
 .toast .dot { width: 8px; height: 8px; border-radius: 50%; animation: blip 1.2s infinite; }
 @keyframes toast-in { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: none; } }
 @keyframes qf-spin { to { transform: rotate(360deg); } }
+@keyframes vitals-bar { from { transform: scaleX(0); opacity: 0; } to { transform: scaleX(1); opacity: 1; } }
 
 /* ── Filter bar ────────────────────────────────────────── */
 .filter-bar {
