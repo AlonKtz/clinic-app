@@ -50,8 +50,10 @@ function VitalsScreen({ doctors, patients, appointments, onClose }) {
     { label: 'DOCTORS',      value: doctors.length,       color: '#C58FFF', glow: 'rgba(197,143,255,0.5)',    delay: 640 },
   ];
 
-  // ECG path — same smooth bezier shape as the dashboard EKGLine
-  const ekgPath = Array.from({ length: 8 }, (_, i) => {
+  // ECG path — 9 reps (1080px) so the loop is seamless:
+  // viewBox is 960px; animating −120px means the path right-edge lands exactly
+  // on the viewport edge at t=100%, then snaps back with no gap.
+  const ekgPath = Array.from({ length: 9 }, (_, i) => {
     const o = i * 120;
     return [
       `M${o},30 L${o+32},30`,
@@ -127,7 +129,9 @@ function VitalsScreen({ doctors, patients, appointments, onClose }) {
             </linearGradient>
             <filter id="vGlow"><feGaussianBlur stdDeviation="3"/></filter>
           </defs>
-          <g className="ekg-scroll">
+          <g>
+            <animateTransform attributeName="transform" type="translate"
+              from="0,0" to="-120,0" dur="0.9s" repeatCount="indefinite"/>
             <path d={ekgPath} fill="none" stroke="url(#vGrad)" strokeWidth="3"
               strokeLinecap="round" strokeLinejoin="round" filter="url(#vGlow)"/>
             <path d={ekgPath} fill="none" stroke="#FFD0DA" strokeWidth="1.2"

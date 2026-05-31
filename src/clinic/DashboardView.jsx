@@ -58,7 +58,10 @@ function EKGLine() {
     return () => clearInterval(t);
   }, []);
 
-  const path = Array.from({ length: 8 }, (_, i) => ekgUnit(i * 120)).join(' ');
+  // 9 reps = 1080px. viewBox is 960px wide.
+  // Animate by exactly −120px (1 unit): at t=100% the path right-edge lands
+  // on the viewport right-edge, then snaps back → perfectly seamless loop.
+  const path = Array.from({ length: 9 }, (_, i) => ekgUnit(i * 120)).join(' ');
 
   return (
     <div className="ekg-host">
@@ -72,8 +75,9 @@ function EKGLine() {
           </linearGradient>
           <filter id="ekgGlow"><feGaussianBlur stdDeviation="2.5"/></filter>
         </defs>
-        {/* CSS animation on the group — compositor-driven, no jank */}
-        <g className="ekg-scroll">
+        <g>
+          <animateTransform attributeName="transform" type="translate"
+            from="0,0" to="-120,0" dur="0.9s" repeatCount="indefinite"/>
           <path d={path} fill="none" stroke="url(#ekgGrad)" strokeWidth="2.8"
             strokeLinecap="round" strokeLinejoin="round" filter="url(#ekgGlow)" opacity="0.75"/>
           <path d={path} fill="none" stroke="#FFD0DA" strokeWidth="1.2"
