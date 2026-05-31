@@ -171,14 +171,20 @@ export default function SystemView() {
         </div>
       </div>
 
-      <div style={{ borderRadius:16, overflow:'hidden',
+      {/* Aspect-ratio wrapper: width 100%, height locked to viewBox ratio.
+          direction:ltr defeats the RTL overflow that was clipping the left.
+          SVG is absolutely positioned to fill the box exactly — no height:auto
+          ambiguity, no intrinsic-size conflicts. */}
+      <div style={{
+        position:'relative', width:'100%', aspectRatio:`${W} / ${H}`,
+        borderRadius:16, overflow:'hidden', direction:'ltr',
         background:'rgba(4,5,12,0.9)', border:'1px solid rgba(255,255,255,0.07)',
-        boxShadow:'0 0 60px rgba(0,0,0,0.5)' }}>
-        {/* Responsive SVG: viewBox + width:100% only, NO width/height attrs */}
+        boxShadow:'0 0 60px rgba(0,0,0,0.5)',
+      }}>
         <svg
           viewBox={`0 0 ${W} ${H}`}
           preserveAspectRatio="xMidYMid meet"
-          style={{ display:'block', width:'100%', height:'auto' }}
+          style={{ position:'absolute', inset:0, width:'100%', height:'100%', display:'block' }}
         >
           <defs>
             <filter id="blur6"><feGaussianBlur stdDeviation="6"/></filter>
