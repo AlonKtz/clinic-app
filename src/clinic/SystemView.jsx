@@ -1,6 +1,6 @@
 // QFlow OS v2 — System Architecture View
-// 3D n8n-style animated node graph with live data-flow particles
-import { useRef, useEffect, useCallback } from 'react';
+// n8n-style animated node graph with live data-flow particles
+import { useRef } from 'react';
 
 // ── Canvas dimensions ─────────────────────────────────────────────────────────
 const W = 950, H = 520;
@@ -199,38 +199,6 @@ function Edge({ e }) {
 
 // ── Main view ─────────────────────────────────────────────────────────────────
 export default function SystemView() {
-  const wrapRef  = useRef();
-  const tiltRef  = useRef({ rx: 10, ry: -6 });
-  const targetRef = useRef({ rx: 10, ry: -6 });
-
-  // Smooth 3D tilt tracking
-  useEffect(() => {
-    let raf;
-    const tick = () => {
-      const c = tiltRef.current, t = targetRef.current;
-      c.rx += (t.rx - c.rx) * 0.07;
-      c.ry += (t.ry - c.ry) * 0.07;
-      if (wrapRef.current) {
-        wrapRef.current.style.transform =
-          `perspective(1100px) rotateX(${c.rx}deg) rotateY(${c.ry}deg)`;
-      }
-      raf = requestAnimationFrame(tick);
-    };
-    raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
-  }, []);
-
-  const onMouseMove = useCallback((e) => {
-    const rect = e.currentTarget.getBoundingClientRect();
-    const x = (e.clientX - rect.left)  / rect.width  - 0.5;
-    const y = (e.clientY - rect.top)   / rect.height - 0.5;
-    targetRef.current = { rx: 10 + y * -10, ry: -6 + x * 14 };
-  }, []);
-
-  const onMouseLeave = useCallback(() => {
-    targetRef.current = { rx: 10, ry: -6 };
-  }, []);
-
   return (
     <div className="reveal" style={{ animationDelay: '.05s' }}>
       {/* Page header */}
@@ -251,56 +219,28 @@ export default function SystemView() {
         }}>React · Supabase · PostgreSQL · Realtime · GitHub Pages</div>
       </div>
 
-      {/* 3D canvas outer container (mouse tracking) */}
-      <div
-        onMouseMove={onMouseMove}
-        onMouseLeave={onMouseLeave}
-        style={{
-          perspective: '1100px',
-          cursor: 'crosshair',
-          userSelect: 'none',
-        }}
-      >
-        {/* Inner canvas — receives the 3D transform */}
-        <div
-          ref={wrapRef}
-          style={{
-            position: 'relative',
-            width: W, height: H,
-            maxWidth: '100%',
-            transformStyle: 'preserve-3d',
-            transformOrigin: 'center center',
-            willChange: 'transform',
-          }}
-        >
-          {/* Dot-grid background */}
-          <div style={{
-            position: 'absolute', inset: 0, borderRadius: 18,
-            background: 'rgba(4,5,12,0.85)',
-            border: '1px solid rgba(255,255,255,0.07)',
-            boxShadow: '0 0 80px rgba(0,0,0,0.6), inset 0 0 60px rgba(0,0,0,0.4)',
-            backdropFilter: 'blur(8px)',
-            backgroundImage:
-              'radial-gradient(circle, rgba(255,255,255,0.07) 1px, transparent 1px)',
-            backgroundSize: '28px 28px',
-          }}/>
-
+      {/* Centered canvas */}
+      <div style={{ display: 'flex', justifyContent: 'center' }}>
+        <div style={{
+          position: 'relative',
+          width: W, height: H,
+          flexShrink: 0,
+          borderRadius: 18,
+          background: 'rgba(4,5,12,0.85)',
+          border: '1px solid rgba(255,255,255,0.07)',
+          boxShadow: '0 0 80px rgba(0,0,0,0.6), inset 0 0 60px rgba(0,0,0,0.4)',
+          backdropFilter: 'blur(8px)',
+          backgroundImage:
+            'radial-gradient(circle, rgba(255,255,255,0.07) 1px, transparent 1px)',
+          backgroundSize: '28px 28px',
+          overflow: 'hidden',
+        }}>
           {/* SVG layer — edges + particles */}
           <svg
             viewBox={`0 0 ${W} ${H}`}
             width={W} height={H}
-            style={{ position: 'absolute', inset: 0, zIndex: 1, overflow: 'visible' }}
+            style={{ position: 'absolute', inset: 0, zIndex: 1 }}
           >
-            <defs>
-              {EDGES.map(e => (
-                <marker key={e.id}
-                  id={`arrow-${e.id.replace(/[→]/g, '-')}`}
-                  markerWidth="6" markerHeight="6"
-                  refX="3" refY="3" orient="auto">
-                  <path d="M0 0 L6 3 L0 6 Z" fill={e.color} opacity="0.7"/>
-                </marker>
-              ))}
-            </defs>
             {EDGES.map(e => <Edge key={e.id} e={e}/>)}
           </svg>
 
@@ -311,10 +251,10 @@ export default function SystemView() {
           <div style={{
             position: 'absolute', bottom: 14, left: 16,
             fontFamily: 'var(--font-mono)', fontSize: 9,
-            color: 'rgba(255,255,255,0.2)', letterSpacing: '0.2em',
+            color: 'rgba(255,255,255,0.18)', letterSpacing: '0.2em',
             textTransform: 'uppercase', zIndex: 3,
           }}>
-            DRAG MOUSE TO TILT · LIVE ANIMATION
+            LIVE ANIMATION
           </div>
         </div>
       </div>
