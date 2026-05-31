@@ -170,12 +170,12 @@ export default function SystemView() {
         </div>
       </div>
 
-      {/* Wrapper fills available width AND a viewport-relative height, so the
-          diagram grows on big screens instead of sitting tiny with a void below.
-          The SVG scales-to-fit and centers via preserveAspectRatio meet, so it
-          stays uncropped and proportional on every device (phone → 4K). */}
+      {/* Height follows width via aspect-ratio (no letterbox void). The shell
+          goes full-width on this tab (see .shell[data-tab="system"] in CSS) so
+          the diagram can actually grow on big screens. maxHeight guards very
+          wide/short monitors; the SVG meet-centers either way. */}
       <div style={{ borderRadius:16, overflow:'hidden', direction:'ltr',
-        width:'100%', height:'clamp(340px, 74vh, 900px)',
+        width:'100%', aspectRatio:`${W} / ${H}`, maxHeight:'82vh',
         background:'rgba(4,5,12,0.9)', border:'1px solid rgba(255,255,255,0.07)',
         boxShadow:'0 0 60px rgba(0,0,0,0.5)',
         backgroundImage:'radial-gradient(circle, rgba(255,255,255,0.05) 1px, transparent 1px)',

@@ -111,6 +111,11 @@ body {
   position: relative; z-index: 10;
   max-width: 1320px; margin: 0 auto; padding: 24px 32px 48px;
 }
+/* System Architecture tab: let the diagram use the full screen width */
+.shell[data-tab="system"] {
+  max-width: none;
+  padding-right: 100px; /* clear the fixed sidenav on the right */
+}
 .topbar {
   display: flex; align-items: center; gap: 24px;
   padding: 16px 22px; border-radius: var(--r-lg);
