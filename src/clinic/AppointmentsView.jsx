@@ -75,27 +75,79 @@ function AppointmentForm({ doctors, patients, onSave, onCancel }) {
   );
 }
 
+// ── Single appointment row ────────────────────────────────────────────────────
+function AptRow({ a, i, isPast, doc, pat, onDelete }) {
+  return (
+    <div key={a.appointmentNumber} className="list-row" style={{
+      animation: 'reveal-up 500ms var(--ease) backwards',
+      animationDelay: `${i * 0.04}s`,
+      opacity: isPast ? 0.55 : 1,
+      ...(isPast ? {} : { borderRight: '2px solid var(--red)' }),
+    }}>
+      <div className="av" style={isPast ? { background: 'rgba(255,255,255,0.06)' } : {}}>
+        {pat ? initials(pat.patientName) : '??'}
+      </div>
+      <div className="body">
+        <div className="name">{pat ? pat.patientName : <em style={{ color: 'var(--red-bright)' }}>מטופל נמחק</em>}</div>
+        <div className="meta">
+          <span><strong>{fmtDateTime(a.dateTime)}</strong></span>
+          <span className="sep">·</span>
+          <span>{doc ? doc.doctorName : <em style={{ color: 'var(--red-bright)' }}>רופא נמחק</em>}</span>
+          <span className="sep">·</span>
+          <span style={{ color: isPast ? 'var(--fg-3)' : 'var(--red-bright)' }}>{a.reason}</span>
+        </div>
+      </div>
+      <span className="stat" style={{ fontFamily: 'var(--font-mono)' }}>#{a.appointmentNumber}</span>
+      {isPast
+        ? <span className="stat done">COMPLETE</span>
+        : <span className="stat live">
+            <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'currentColor', animation: 'blip 1.2s infinite' }}/>
+            SCHEDULED
+          </span>
+      }
+      <button className="btn icon" onClick={() => onDelete(a.appointmentNumber)} title="מחק">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+        </svg>
+      </button>
+    </div>
+  );
+}
+
 export default function AppointmentsView({ appointments, doctors, patients, onAdd, onDelete }) {
-  const [open, setOpen] = useState(false);
-  const [search, setSearch] = useState('');
-  const [filterDoc, setFilterDoc] = useState('');
+  const [open,        setOpen]        = useState(false);
+  const [search,      setSearch]      = useState('');
+  const [filterDoc,   setFilterDoc]   = useState('');
+  const [archiveOpen, setArchiveOpen] = useState(false);
   const now = new Date();
 
-  const getDoctor = (l) => doctors.find(d => d.licenseNumber === l);
+  const getDoctor  = (l) => doctors.find(d => d.licenseNumber === l);
   const getPatient = (i) => patients.find(p => p.idNumber === i);
 
-  const filtered = useMemo(() => {
+  // Apply filters then split into upcoming / past
+  const { upcoming, archived } = useMemo(() => {
     const q = search.trim();
-    return [...appointments]
+    const base = [...appointments]
       .filter(a => !filterDoc || a.doctorLicense === filterDoc)
       .filter(a => {
         if (!q) return true;
         const doc = getDoctor(a.doctorLicense)?.doctorName || '';
-        const pat = getPatient(a.patientId)?.patientName || '';
+        const pat = getPatient(a.patientId)?.patientName  || '';
         return (doc + pat + a.reason).includes(q);
-      })
+      });
+
+    const upcoming = base
+      .filter(a => new Date(a.dateTime) >= now)
       .sort((a, b) => new Date(a.dateTime) - new Date(b.dateTime));
+
+    const archived = base
+      .filter(a => new Date(a.dateTime) < now)
+      .sort((a, b) => new Date(b.dateTime) - new Date(a.dateTime)); // newest first
+
+    return { upcoming, archived };
   }, [appointments, search, filterDoc, doctors, patients]);
+
+  const totalFiltered = upcoming.length + archived.length;
 
   return (
     <div className="reveal" style={{ animationDelay: '.05s' }}>
@@ -131,7 +183,7 @@ export default function AppointmentsView({ appointments, doctors, patients, onAd
         )}
       </div>
 
-      {filtered.length === 0 ? (
+      {totalFiltered === 0 ? (
         <EmptyState
           title="אין תורים להצגה"
           sub={appointments.length === 0 ? 'CLICK NEW APPOINTMENT TO BEGIN' : 'NO MATCHES FOR FILTER'}
@@ -139,46 +191,95 @@ export default function AppointmentsView({ appointments, doctors, patients, onAd
         />
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-          {filtered.map((a, i) => {
-            const isPast = new Date(a.dateTime) < now;
-            const doc = getDoctor(a.doctorLicense);
-            const pat = getPatient(a.patientId);
-            return (
-              <div key={a.appointmentNumber} className="list-row" style={{
-                animation: 'reveal-up 500ms var(--ease) backwards',
-                animationDelay: `${i * 0.04}s`,
-                opacity: isPast ? 0.6 : 1,
-                ...(isPast ? {} : { borderRight: '2px solid var(--red)' }),
-              }}>
-                <div className="av" style={isPast ? { background: 'rgba(255,255,255,0.08)' } : {}}>
-                  {pat ? initials(pat.patientName) : '??'}
-                </div>
-                <div className="body">
-                  <div className="name">{pat ? pat.patientName : <em style={{ color: 'var(--red-bright)' }}>מטופל נמחק</em>}</div>
-                  <div className="meta">
-                    <span><strong>{fmtDateTime(a.dateTime)}</strong></span>
-                    <span className="sep">·</span>
-                    <span>{doc ? doc.doctorName : <em style={{ color: 'var(--red-bright)' }}>רופא נמחק</em>}</span>
-                    <span className="sep">·</span>
-                    <span style={{ color: 'var(--red-bright)' }}>{a.reason}</span>
-                  </div>
-                </div>
-                <span className="stat" style={{ fontFamily: 'var(--font-mono)' }}>#{a.appointmentNumber}</span>
-                {isPast
-                  ? <span className="stat done">COMPLETE</span>
-                  : <span className="stat live">
-                      <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'currentColor', animation: 'blip 1.2s infinite' }}/>
-                      SCHEDULED
-                    </span>
-                }
-                <button className="btn icon" onClick={() => onDelete(a.appointmentNumber)} title="מחק">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+
+          {/* ── Upcoming appointments ── */}
+          {upcoming.length === 0 && archived.length > 0 ? (
+            <div style={{
+              textAlign: 'center', padding: '28px 0 12px',
+              fontFamily: 'var(--font-mono)', fontSize: 11,
+              color: 'var(--fg-3)', letterSpacing: '0.18em',
+            }}>
+              NO UPCOMING APPOINTMENTS
+            </div>
+          ) : (
+            upcoming.map((a, i) => (
+              <AptRow key={a.appointmentNumber} a={a} i={i} isPast={false}
+                doc={getDoctor(a.doctorLicense)} pat={getPatient(a.patientId)}
+                onDelete={onDelete}/>
+            ))
+          )}
+
+          {/* ── Archive section ── */}
+          {archived.length > 0 && (
+            <div style={{ marginTop: upcoming.length ? 8 : 0 }}>
+
+              {/* Collapsible header */}
+              <button
+                onClick={() => setArchiveOpen(v => !v)}
+                style={{
+                  width: '100%', display: 'flex', alignItems: 'center',
+                  justifyContent: 'space-between',
+                  background: 'rgba(255,255,255,0.03)',
+                  border: '1px solid rgba(255,255,255,0.08)',
+                  borderRadius: archiveOpen ? '14px 14px 0 0' : 14,
+                  padding: '12px 18px', cursor: 'pointer',
+                  transition: 'background 200ms, border-radius 200ms',
+                  color: 'var(--fg-3)',
+                }}
+                onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.06)'}
+                onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.03)'}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  {/* Archive box icon */}
+                  <svg viewBox="0 0 24 24" width="15" height="15" fill="none"
+                    stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="2" y="3" width="20" height="5" rx="1"/>
+                    <path d="M4 8v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8"/>
+                    <path d="M10 12h4"/>
                   </svg>
-                </button>
-              </div>
-            );
-          })}
+                  <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: '0.2em', textTransform: 'uppercase' }}>
+                    ארכיון
+                  </span>
+                  {/* Count badge */}
+                  <span style={{
+                    background: 'rgba(255,255,255,0.08)',
+                    borderRadius: 999, padding: '2px 10px',
+                    fontFamily: 'var(--font-mono)', fontSize: 10, fontWeight: 700,
+                    color: 'var(--fg-3)',
+                  }}>
+                    {archived.length} COMPLETE
+                  </span>
+                </div>
+                {/* Chevron */}
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none"
+                  stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"
+                  style={{ transform: archiveOpen ? 'rotate(180deg)' : 'none', transition: 'transform 240ms var(--ease)' }}>
+                  <path d="M6 9l6 6 6-6"/>
+                </svg>
+              </button>
+
+              {/* Collapsible body */}
+              {archiveOpen && (
+                <div style={{
+                  border: '1px solid rgba(255,255,255,0.08)',
+                  borderTop: 'none',
+                  borderRadius: '0 0 14px 14px',
+                  padding: '8px 0 4px',
+                  display: 'flex', flexDirection: 'column', gap: 6,
+                  overflow: 'hidden',
+                  animation: 'reveal-up 280ms var(--ease) backwards',
+                }}>
+                  {archived.map((a, i) => (
+                    <div key={a.appointmentNumber} style={{ padding: '0 8px' }}>
+                      <AptRow a={a} i={i} isPast={true}
+                        doc={getDoctor(a.doctorLicense)} pat={getPatient(a.patientId)}
+                        onDelete={onDelete}/>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
         </div>
       )}
 
