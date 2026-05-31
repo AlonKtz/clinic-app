@@ -5,6 +5,7 @@ import AppointmentsView from './clinic/AppointmentsView';
 import DoctorsView from './clinic/DoctorsView';
 import PatientsView from './clinic/PatientsView';
 import ERDView from './clinic/ERDView';
+import SystemView from './clinic/SystemView';
 import { useToasts, useConfirm, fmtDateTime } from './clinic/shared';
 import {
   getDoctors, addDoctor, deleteDoctor, deleteAppointmentsByDoctor,
@@ -175,6 +176,10 @@ function SideNav({ tab, setTab, onVitals }) {
     {
       id: 'erd', label: 'ERD', he: 'ERD',
       ic: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14c0 1.66 4.03 3 9 3s9-1.34 9-3V5"/><path d="M3 12c0 1.66 4.03 3 9 3s9-1.34 9-3"/></svg>,
+    },
+    {
+      id: 'system', label: 'System', he: 'מערכת',
+      ic: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="3" width="4" height="4" rx="1"/><rect x="18" y="3" width="4" height="4" rx="1"/><rect x="10" y="10" width="4" height="4" rx="1"/><rect x="2" y="17" width="4" height="4" rx="1"/><rect x="18" y="17" width="4" height="4" rx="1"/><path d="M6 5h4M18 5h-4M12 10V7M6 19h4M18 19h-4M12 14v3M4 7v10M20 7v10"/></svg>,
     },
   ];
 
@@ -418,6 +423,7 @@ export default function ClinicApp() {
             <ERDView/>
           </div>
         )}
+        {tab === 'system' && <SystemView/>}
       </div>
       {toastHost}
       {confirmNode}

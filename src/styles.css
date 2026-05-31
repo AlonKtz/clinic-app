@@ -636,6 +636,9 @@ body {
 @keyframes qf-spin { to { transform: rotate(360deg); } }
 @keyframes vitals-bar { from { transform: scaleX(0); opacity: 0; } to { transform: scaleX(1); opacity: 1; } }
 
+/* Architecture edge dash flow */
+@keyframes edge-flow { to { stroke-dashoffset: -24; } }
+
 /* EKG scroll — CSS compositor animation, no main-thread jank.
    translateX(-50%) = exactly 4 of 8 repeating units → seamless loop. */
 .ekg-scroll { animation: ekg-scroll 3.6s linear infinite; will-change: transform; }
