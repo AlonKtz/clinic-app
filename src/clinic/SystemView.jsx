@@ -1,82 +1,81 @@
 // QFlow OS v2 — System Architecture View
-const W = 1180, H = 520;
+const W = 1300, H = 600;
 
 // ── Nodes ─────────────────────────────────────────────────────────────────────
-// Columns:  Browser  React/GitHub  API/Realtime  DB
-//           x=70     x=285         x=545         x=800
+// Columns:  Browser   React/GitHub   API/Realtime   DB
+//           x=60      x=325          x=635          x=950
 const NODES = [
   {
     id: 'browser', label: 'Client Browser', sub: 'HTTPS · Web App',
     color: '#6BB7FF', soft: 'rgba(107,183,255,0.11)',
-    x: 70, y: 205, w: 165, h: 108,
+    x: 60, y: 245, w: 180, h: 112,
     tags: ['React SPA', 'Mobile + Desktop'],
   },
   {
     id: 'react', label: 'QFlow OS v2', sub: 'React 18 · Vite 5',
     color: '#FF5577', soft: 'rgba(255,45,85,0.11)',
-    x: 285, y: 130, w: 195, h: 180,
+    x: 325, y: 150, w: 205, h: 190,
     tags: ['Dashboard', 'Appointments', 'Doctors', 'Patients'],
   },
   {
     id: 'hosting', label: 'GitHub Pages', sub: 'Static CDN · CI/CD',
     color: '#6BB7FF', soft: 'rgba(107,183,255,0.09)',
-    x: 285, y: 388, w: 195, h: 74,
+    x: 325, y: 452, w: 205, h: 78,
     tags: ['alonktz.github.io'],
   },
   {
     id: 'api', label: 'PostgREST API', sub: 'Supabase · REST',
     color: '#00E5C7', soft: 'rgba(0,229,199,0.11)',
-    x: 545, y: 130, w: 200, h: 180,
+    x: 635, y: 150, w: 210, h: 190,
     tags: ['/clinic_doctors', '/clinic_patients', '/clinic_appointments'],
   },
   {
     id: 'realtime', label: 'Realtime Engine', sub: 'WebSocket · Pub/Sub',
     color: '#FFB454', soft: 'rgba(255,180,84,0.11)',
-    x: 545, y: 388, w: 200, h: 74,
+    x: 635, y: 452, w: 210, h: 78,
     tags: ['CDC · Live Sync'],
   },
   {
     id: 'db', label: 'PostgreSQL', sub: 'Supabase · Database',
     color: '#C58FFF', soft: 'rgba(197,143,255,0.11)',
-    x: 800, y: 90, w: 320, h: 220,
+    x: 950, y: 120, w: 350, h: 240,
     tags: ['clinic_doctors', 'clinic_patients', 'clinic_appointments', 'Row Level Security'],
   },
 ];
 
-// Connection reference points:
-// browser: right=235, midY=259
-// react:   left=285, right=480, bottom=310, midY=220
-// github:  top=388, midX=382
-// api:     left=545, right=745, bottom=310, midY=220
-// realtime:left=545, right=745, top=388, midY=425
-// db:      left=800, bottom=310, midY=200
-
+// Edge connection points for this layout:
+//  browser  right=240  midY=301
+//  react    left=325 right=530 top=150 bottom=340 midY=245
+//  github   top=452 midX=427
+//  api      left=635 right=845 top=150 bottom=340 midY=245
+//  realtime left=635 right=845 top=452 midY=491
+//  db       left=950 right=1300 bottom=360 midY=240
+//
+// lx/ly = explicit horizontal label anchor (plain <text>, never path-rotated)
 const EDGES = [
-  // Forward (L→R) — labelled
-  { id:'br-re', color:'#6BB7FF', dur:'3.0s', label:'SPA Load',
-    d:'M235,259 C262,259 262,220 285,220' },
+  { id:'br-re', color:'#6BB7FF', dur:'3.0s', label:'SPA Load',      lx:283, ly:266,
+    d:'M240,301 C283,301 283,245 325,245' },
 
-  { id:'gh-re', color:'#6BB7FF', dur:'4.5s', label:'Bundle',
-    d:'M382,388 L382,310' },
+  { id:'gh-re', color:'#6BB7FF', dur:'4.5s', label:'Bundle',        lx:427, ly:401,
+    d:'M427,452 L427,340' },
 
-  { id:'re-ap', color:'#00E5C7', dur:'1.8s', label:'REST Requests',
-    d:'M480,208 L545,208' },
+  { id:'re-ap', color:'#00E5C7', dur:'1.8s', label:'REST Requests', lx:582, ly:226,
+    d:'M530,236 L635,236' },
 
-  { id:'ap-db', color:'#C58FFF', dur:'2.2s', label:'SQL Queries',
-    d:'M745,208 L800,208' },
+  { id:'ap-re', color:'#FF5577', dur:'1.6s', label:'JSON',          lx:582, ly:283,
+    d:'M635,262 L530,262' },
 
-  { id:'db-rt', color:'#FFB454', dur:'2.8s', label:'Change Events',
-    d:'M800,265 C765,265 765,425 745,425' },
+  { id:'ap-db', color:'#C58FFF', dur:'2.2s', label:'SQL Queries',   lx:897, ly:226,
+    d:'M845,236 L950,236' },
 
-  { id:'rt-re', color:'#FFB454', dur:'2.1s', label:'Live Push',
-    d:'M645,388 C645,330 480,330 480,230' },
+  { id:'db-ap', color:'#C58FFF', dur:'1.9s', label:'Query Results', lx:845, ly:572,
+    d:'M1125,360 C1125,548 740,548 740,340' },
 
-  // Return (R→L) — no label (textPath would render upside-down)
-  { id:'ap-re', color:'#FF5577', dur:'1.6s', label:'',
-    d:'M545,232 L480,232' },
+  { id:'db-rt', color:'#FFB454', dur:'2.8s', label:'Change Events', lx:920, ly:401,
+    d:'M950,300 C905,300 905,491 845,491' },
 
-  { id:'db-ap', color:'#C58FFF', dur:'1.9s', label:'',
-    d:'M960,310 C960,475 645,475 645,310' },
+  { id:'rt-re', color:'#FFB454', dur:'2.1s', label:'Live Push',     lx:600, ly:398,
+    d:'M740,452 C740,400 530,400 530,260' },
 ];
 
 // ── SVG Node ──────────────────────────────────────────────────────────────────
@@ -171,20 +170,15 @@ export default function SystemView() {
         </div>
       </div>
 
-      {/* Aspect-ratio wrapper: width 100%, height locked to viewBox ratio.
-          direction:ltr defeats the RTL overflow that was clipping the left.
-          SVG is absolutely positioned to fill the box exactly — no height:auto
-          ambiguity, no intrinsic-size conflicts. */}
-      <div style={{
-        position:'relative', width:'100%', aspectRatio:`${W} / ${H}`,
-        borderRadius:16, overflow:'hidden', direction:'ltr',
+      <div style={{ borderRadius:16, overflow:'hidden', direction:'ltr',
         background:'rgba(4,5,12,0.9)', border:'1px solid rgba(255,255,255,0.07)',
-        boxShadow:'0 0 60px rgba(0,0,0,0.5)',
-      }}>
+        boxShadow:'0 0 60px rgba(0,0,0,0.5)' }}>
+        {/* Responsive SVG: viewBox + width:100% only, NO width/height attrs.
+            direction:ltr on wrapper prevents RTL overflow from clipping the left. */}
         <svg
           viewBox={`0 0 ${W} ${H}`}
           preserveAspectRatio="xMidYMid meet"
-          style={{ position:'absolute', inset:0, width:'100%', height:'100%', display:'block' }}
+          style={{ display:'block', width:'100%', height:'auto' }}
         >
           <defs>
             <filter id="blur6"><feGaussianBlur stdDeviation="6"/></filter>
