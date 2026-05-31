@@ -1,91 +1,88 @@
 // QFlow OS v2 — System Architecture View
-const W = 1100, H = 500;
+const W = 1180, H = 520;
 
-// ── Layout constants ──────────────────────────────────────────────────────────
-// Row Y positions
-const R1Y = 130;  // top row: React, API, DB
-const R2Y = 372;  // bottom row: GitHub, Realtime
-const COL = [50, 252, 488, 730]; // x for: Browser, React/GitHub, API/Realtime, DB
-
+// ── Nodes ─────────────────────────────────────────────────────────────────────
+// Columns:  Browser  React/GitHub  API/Realtime  DB
+//           x=70     x=285         x=545         x=800
 const NODES = [
   {
     id: 'browser', label: 'Client Browser', sub: 'HTTPS · Web App',
     color: '#6BB7FF', soft: 'rgba(107,183,255,0.11)',
-    x: COL[0], y: 198, w: 152, h: 104,
+    x: 70, y: 205, w: 165, h: 108,
     tags: ['React SPA', 'Mobile + Desktop'],
   },
   {
     id: 'react', label: 'QFlow OS v2', sub: 'React 18 · Vite 5',
     color: '#FF5577', soft: 'rgba(255,45,85,0.11)',
-    x: COL[1], y: R1Y, w: 186, h: 176,
+    x: 285, y: 130, w: 195, h: 180,
     tags: ['Dashboard', 'Appointments', 'Doctors', 'Patients'],
   },
   {
     id: 'hosting', label: 'GitHub Pages', sub: 'Static CDN · CI/CD',
     color: '#6BB7FF', soft: 'rgba(107,183,255,0.09)',
-    x: COL[1], y: R2Y, w: 186, h: 72,
+    x: 285, y: 388, w: 195, h: 74,
     tags: ['alonktz.github.io'],
   },
   {
     id: 'api', label: 'PostgREST API', sub: 'Supabase · REST',
     color: '#00E5C7', soft: 'rgba(0,229,199,0.11)',
-    x: COL[2], y: R1Y, w: 192, h: 176,
+    x: 545, y: 130, w: 200, h: 180,
     tags: ['/clinic_doctors', '/clinic_patients', '/clinic_appointments'],
   },
   {
     id: 'realtime', label: 'Realtime Engine', sub: 'WebSocket · Pub/Sub',
     color: '#FFB454', soft: 'rgba(255,180,84,0.11)',
-    x: COL[2], y: R2Y, w: 192, h: 72,
+    x: 545, y: 388, w: 200, h: 74,
     tags: ['CDC · Live Sync'],
   },
   {
     id: 'db', label: 'PostgreSQL', sub: 'Supabase · Database',
     color: '#C58FFF', soft: 'rgba(197,143,255,0.11)',
-    x: COL[3], y: 90, w: 352, h: 220,
+    x: 800, y: 90, w: 320, h: 220,
     tags: ['clinic_doctors', 'clinic_patients', 'clinic_appointments', 'Row Level Security'],
   },
 ];
 
-// Pre-computed edge connection points
-// React:    right=438, bottom=306, mid-y=218
-// API:      left=488, right=680, bottom=306, mid-y=218
-// DB:       left=730, bottom=310, mid-y=200
-// Browser:  right=202, mid-y=250
-// GitHub:   top=372, mid-x=345
-// Realtime: left=488, right=680, top=372, mid-y=408
+// Connection reference points:
+// browser: right=235, midY=259
+// react:   left=285, right=480, bottom=310, midY=220
+// github:  top=388, midX=382
+// api:     left=545, right=745, bottom=310, midY=220
+// realtime:left=545, right=745, top=388, midY=425
+// db:      left=800, bottom=310, midY=200
 
 const EDGES = [
-  // ── Forward paths (left→right) — labels shown ────────────────────────────
+  // Forward (L→R) — labelled
   { id:'br-re', color:'#6BB7FF', dur:'3.0s', label:'SPA Load',
-    d:'M202,250 C228,250 228,218 252,218' },
+    d:'M235,259 C262,259 262,220 285,220' },
 
   { id:'gh-re', color:'#6BB7FF', dur:'4.5s', label:'Bundle',
-    d:'M345,372 L345,306' },
+    d:'M382,388 L382,310' },
 
   { id:'re-ap', color:'#00E5C7', dur:'1.8s', label:'REST Requests',
-    d:'M438,206 L488,206' },
+    d:'M480,208 L545,208' },
 
   { id:'ap-db', color:'#C58FFF', dur:'2.2s', label:'SQL Queries',
-    d:'M680,206 L730,206' },
+    d:'M745,208 L800,208' },
 
   { id:'db-rt', color:'#FFB454', dur:'2.8s', label:'Change Events',
-    d:'M730,262 C698,262 698,408 680,408' },
+    d:'M800,265 C765,265 765,425 745,425' },
 
   { id:'rt-re', color:'#FFB454', dur:'2.1s', label:'Live Push',
-    d:'M584,372 C584,312 438,312 438,228' },
+    d:'M645,388 C645,330 480,330 480,230' },
 
-  // ── Return paths (right→left) — no label to avoid upside-down text ───────
+  // Return (R→L) — no label (textPath would render upside-down)
   { id:'ap-re', color:'#FF5577', dur:'1.6s', label:'',
-    d:'M488,228 L438,228' },
+    d:'M545,232 L480,232' },
 
   { id:'db-ap', color:'#C58FFF', dur:'1.9s', label:'',
-    d:'M906,310 C906,470 584,470 584,306' },
+    d:'M960,310 C960,475 645,475 645,310' },
 ];
 
 // ── SVG Node ──────────────────────────────────────────────────────────────────
 function Node({ n }) {
   const { x, y, w, h, label, sub, color, soft, tags } = n;
-  const chipW = (t) => Math.min(w - 28, Math.max(56, t.length * 5.5 + 18));
+  const chipW = (t) => Math.min(w - 28, Math.max(56, t.length * 5.6 + 18));
 
   return (
     <g>
@@ -93,30 +90,25 @@ function Node({ n }) {
         fill="rgba(0,0,0,0.45)" filter="url(#blur6)"/>
       <rect x={x} y={y} width={w} height={h} rx={12}
         fill={soft} stroke={`${color}50`} strokeWidth={1.5}/>
-      {/* Top accent */}
       <rect x={x+1} y={y} width={w-2} height={3} rx={1.5} fill={color}/>
       <rect x={x+1} y={y} width={w-2} height={3} rx={1.5}
         fill={color} filter="url(#blur8)" opacity={0.65}/>
-      {/* Title */}
-      <text x={x+14} y={y+26} fill="#fff" fontSize={14} fontWeight="700"
+      <text x={x+15} y={y+27} fill="#fff" fontSize={14} fontWeight="700"
         fontFamily="Space Grotesk, Heebo, system-ui">{label}</text>
-      {/* Sub */}
-      <text x={x+14} y={y+41} fill={color} fontSize={8} opacity={0.8}
+      <text x={x+15} y={y+42} fill={color} fontSize={8} opacity={0.8}
         fontFamily="JetBrains Mono, monospace" letterSpacing="1.3">
         {sub.toUpperCase()}
       </text>
-      {/* Divider */}
-      <line x1={x+14} y1={y+49} x2={x+w-14} y2={y+49}
+      <line x1={x+15} y1={y+50} x2={x+w-15} y2={y+50}
         stroke={`${color}28`} strokeWidth={1}/>
-      {/* Tag chips */}
       {tags.map((tag, i) => {
         const cw = chipW(tag);
-        const ty = y + 57 + i * 21;
+        const ty = y + 58 + i * 21;
         return (
           <g key={tag}>
-            <rect x={x+14} y={ty} width={cw} height={16} rx={4}
+            <rect x={x+15} y={ty} width={cw} height={16} rx={4}
               fill={`${color}18`} stroke={`${color}40`} strokeWidth={0.8}/>
-            <text x={x+22} y={ty+11} fill={color} fontSize={8.5} fontWeight={600}
+            <text x={x+23} y={ty+11} fill={color} fontSize={8.5} fontWeight={600}
               fontFamily="JetBrains Mono, monospace">{tag}</text>
           </g>
         );
@@ -129,7 +121,6 @@ function Node({ n }) {
 function Edge({ e }) {
   const pid = `p${e.id}`;
   const dur = parseFloat(e.dur);
-
   return (
     <g>
       <path id={pid} d={e.d} fill="none"
@@ -140,7 +131,7 @@ function Edge({ e }) {
         style={{ animation: `edge-flow ${e.dur} linear infinite` }}/>
       {e.label && (
         <text>
-          <textPath href={`#${pid}`} startOffset="28%"
+          <textPath href={`#${pid}`} startOffset="26%"
             style={{ fontFamily:'JetBrains Mono,monospace', fontSize:'9px',
               fill: e.color, opacity: 0.6, letterSpacing: '0.08em' }}>
             {e.label}
@@ -183,11 +174,10 @@ export default function SystemView() {
       <div style={{ borderRadius:16, overflow:'hidden',
         background:'rgba(4,5,12,0.9)', border:'1px solid rgba(255,255,255,0.07)',
         boxShadow:'0 0 60px rgba(0,0,0,0.5)' }}>
+        {/* Responsive SVG: viewBox + width:100% only, NO width/height attrs */}
         <svg
           viewBox={`0 0 ${W} ${H}`}
-          width={W}
-          height={H}
-          preserveAspectRatio="xMinYMin meet"
+          preserveAspectRatio="xMidYMid meet"
           style={{ display:'block', width:'100%', height:'auto' }}
         >
           <defs>
@@ -200,7 +190,7 @@ export default function SystemView() {
           <rect width={W} height={H} fill="url(#dots)"/>
           {EDGES.map(e => <Edge key={e.id} e={e}/>)}
           {NODES.map(n => <Node key={n.id} n={n}/>)}
-          <text x={20} y={H-12} fill="rgba(255,255,255,0.15)" fontSize={8.5}
+          <text x={24} y={H-14} fill="rgba(255,255,255,0.15)" fontSize={8.5}
             fontFamily="JetBrains Mono,monospace" letterSpacing="2">
             LIVE ANIMATION · QFLOW OS v2
           </text>
