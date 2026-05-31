@@ -129,15 +129,6 @@ function Edge({ e }) {
         stroke={e.color} strokeWidth={2} opacity={0.5}
         strokeDasharray="8 5" strokeLinecap="round"
         style={{ animation: `edge-flow ${e.dur} linear infinite` }}/>
-      {e.label && (
-        <text>
-          <textPath href={`#${pid}`} startOffset="26%"
-            style={{ fontFamily:'JetBrains Mono,monospace', fontSize:'9px',
-              fill: e.color, opacity: 0.6, letterSpacing: '0.08em' }}>
-            {e.label}
-          </textPath>
-        </text>
-      )}
       {[0, 1/3, 2/3].map((frac, i) => (
         <circle key={i} r={5} fill={e.color}
           style={{ filter: `drop-shadow(0 0 7px ${e.color})` }}>
@@ -146,6 +137,15 @@ function Edge({ e }) {
           </animateMotion>
         </circle>
       ))}
+      {/* Horizontal label with dark halo — always readable, never path-rotated */}
+      {e.label && (
+        <text x={e.lx} y={e.ly} textAnchor="middle"
+          style={{ fontFamily:'JetBrains Mono,monospace', fontSize:'9.5px',
+            fontWeight:600, fill:e.color, letterSpacing:'0.06em',
+            paintOrder:'stroke', stroke:'#05060c', strokeWidth:4, strokeLinejoin:'round' }}>
+          {e.label}
+        </text>
+      )}
     </g>
   );
 }
