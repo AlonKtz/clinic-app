@@ -34,6 +34,22 @@ export function AuroraStage() {
   );
 }
 
+// ── ECG path builder — smooth bezier P-wave & T-wave, sharp QRS ──────────────
+// One unit = 120px. 8 reps total = 960px; CSS animates by -50% (4 units) → seamless.
+function ekgUnit(o) {
+  return [
+    `M${o},30`,
+    `L${o+32},30`,                                          // flat baseline
+    `C${o+34},30 ${o+38},22 ${o+43},22`,                   // P-wave rise (bezier)
+    `C${o+48},22 ${o+52},30 ${o+54},30`,                   // P-wave fall (bezier)
+    `L${o+63},30`,                                          // brief flat pre-QRS
+    `L${o+66},35 L${o+70},4 L${o+74},52`,                  // Q dip → R spike → S trough
+    `C${o+77},52 ${o+82},18 ${o+90},18`,                   // T-wave rise (bezier)
+    `C${o+97},18 ${o+103},30 ${o+107},30`,                 // T-wave fall (bezier)
+    `L${o+120},30`,                                         // flat baseline out
+  ].join(' ');
+}
+
 // ── EKG scrolling line ────────────────────────────────────────────────────────
 function EKGLine() {
   const [bpm, setBpm] = useState(72);
@@ -41,30 +57,27 @@ function EKGLine() {
     const t = setInterval(() => setBpm(b => Math.max(64, Math.min(82, b + ((Math.random() - 0.5) * 4 | 0)))), 2400);
     return () => clearInterval(t);
   }, []);
-  const reps = 8;
-  const path = Array.from({ length: reps }, (_, i) => {
-    const off = i * 120;
-    return `M ${off} 30 L ${off+30} 30 L ${off+36} 30 L ${off+40} 14 L ${off+44} 46 L ${off+48} 22 L ${off+52} 30 L ${off+120} 30`;
-  }).join(' ');
+
+  const path = Array.from({ length: 8 }, (_, i) => ekgUnit(i * 120)).join(' ');
+
   return (
     <div className="ekg-host">
       <svg viewBox="0 0 960 60" preserveAspectRatio="none" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }}>
         <defs>
           <linearGradient id="ekgGrad" x1="0" x2="1">
-            <stop offset="0" stopColor="#FF2D55" stopOpacity="0"/>
+            <stop offset="0"   stopColor="#FF2D55" stopOpacity="0"/>
             <stop offset="0.3" stopColor="#FF2D55" stopOpacity="1"/>
             <stop offset="0.6" stopColor="#FF5577" stopOpacity="1"/>
-            <stop offset="1" stopColor="#FF2D55" stopOpacity="0"/>
+            <stop offset="1"   stopColor="#FF2D55" stopOpacity="0"/>
           </linearGradient>
           <filter id="ekgGlow"><feGaussianBlur stdDeviation="2.5"/></filter>
         </defs>
-        <g>
-          <path d={path} fill="none" stroke="url(#ekgGrad)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" filter="url(#ekgGlow)" opacity="0.7">
-            <animateTransform attributeName="transform" type="translate" from="0,0" to="-480,0" dur="3.6s" repeatCount="indefinite"/>
-          </path>
-          <path d={path} fill="none" stroke="#FFD0DA" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round">
-            <animateTransform attributeName="transform" type="translate" from="0,0" to="-480,0" dur="3.6s" repeatCount="indefinite"/>
-          </path>
+        {/* CSS animation on the group — compositor-driven, no jank */}
+        <g className="ekg-scroll">
+          <path d={path} fill="none" stroke="url(#ekgGrad)" strokeWidth="2.8"
+            strokeLinecap="round" strokeLinejoin="round" filter="url(#ekgGlow)" opacity="0.75"/>
+          <path d={path} fill="none" stroke="#FFD0DA" strokeWidth="1.2"
+            strokeLinecap="round" strokeLinejoin="round"/>
         </g>
       </svg>
       <div style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', display: 'flex', flexDirection: 'column', gap: 2, pointerEvents: 'none' }}>

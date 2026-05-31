@@ -636,6 +636,11 @@ body {
 @keyframes qf-spin { to { transform: rotate(360deg); } }
 @keyframes vitals-bar { from { transform: scaleX(0); opacity: 0; } to { transform: scaleX(1); opacity: 1; } }
 
+/* EKG scroll — CSS compositor animation, no main-thread jank.
+   translateX(-50%) = exactly 4 of 8 repeating units → seamless loop. */
+.ekg-scroll { animation: ekg-scroll 3.6s linear infinite; will-change: transform; }
+@keyframes ekg-scroll { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+
 /* ── Filter bar ────────────────────────────────────────── */
 .filter-bar {
   display: flex; gap: 10px; flex-wrap: wrap; align-items: center;

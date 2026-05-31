@@ -50,10 +50,16 @@ function VitalsScreen({ doctors, patients, appointments, onClose }) {
     { label: 'DOCTORS',      value: doctors.length,       color: '#C58FFF', glow: 'rgba(197,143,255,0.5)',    delay: 640 },
   ];
 
-  // EKG path (same as dashboard)
+  // ECG path — same smooth bezier shape as the dashboard EKGLine
   const ekgPath = Array.from({ length: 8 }, (_, i) => {
     const o = i * 120;
-    return `M${o} 30 L${o+30} 30 L${o+36} 30 L${o+40} 14 L${o+44} 46 L${o+48} 22 L${o+52} 30 L${o+120} 30`;
+    return [
+      `M${o},30 L${o+32},30`,
+      `C${o+34},30 ${o+38},22 ${o+43},22 C${o+48},22 ${o+52},30 ${o+54},30`,
+      `L${o+63},30 L${o+66},35 L${o+70},4 L${o+74},52`,
+      `C${o+77},52 ${o+82},18 ${o+90},18 C${o+97},18 ${o+103},30 ${o+107},30`,
+      `L${o+120},30`,
+    ].join(' ');
   }).join(' ');
 
   return (
@@ -121,15 +127,12 @@ function VitalsScreen({ doctors, patients, appointments, onClose }) {
             </linearGradient>
             <filter id="vGlow"><feGaussianBlur stdDeviation="3"/></filter>
           </defs>
-          <path d={ekgPath} fill="none" stroke="url(#vGrad)" strokeWidth="3"
-            strokeLinecap="round" filter="url(#vGlow)">
-            <animateTransform attributeName="transform" type="translate"
-              from="0,0" to="-480,0" dur="3.6s" repeatCount="indefinite"/>
-          </path>
-          <path d={ekgPath} fill="none" stroke="#FFD0DA" strokeWidth="1.2" strokeLinecap="round">
-            <animateTransform attributeName="transform" type="translate"
-              from="0,0" to="-480,0" dur="3.6s" repeatCount="indefinite"/>
-          </path>
+          <g className="ekg-scroll">
+            <path d={ekgPath} fill="none" stroke="url(#vGrad)" strokeWidth="3"
+              strokeLinecap="round" strokeLinejoin="round" filter="url(#vGlow)"/>
+            <path d={ekgPath} fill="none" stroke="#FFD0DA" strokeWidth="1.2"
+              strokeLinecap="round" strokeLinejoin="round"/>
+          </g>
         </svg>
       </div>
 
