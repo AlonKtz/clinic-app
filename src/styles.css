@@ -112,10 +112,7 @@ body {
   max-width: 1320px; margin: 0 auto; padding: 24px 32px 48px;
 }
 /* System Architecture tab: let the diagram use the full screen width */
-.shell[data-tab="system"] {
-  max-width: none;
-  padding-right: 100px; /* clear the fixed sidenav on the right */
-}
+.shell[data-tab="system"] { max-width: none; }
 .topbar {
   display: flex; align-items: center; gap: 24px;
   padding: 16px 22px; border-radius: var(--r-lg);
@@ -680,6 +677,8 @@ body {
 /* ── Desktop: nudge shell left so the right-side sidenav never overlaps ── */
 @media (min-width: 641px) {
   .shell { padding-right: 80px; }
+  /* System tab uses full width but still must clear the fixed right sidenav */
+  .shell[data-tab="system"] { padding-right: 100px; }
 }
 
 /* ── Mobile (≤ 640px) ──────────────────────────────────────── */
