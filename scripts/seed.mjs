@@ -134,9 +134,13 @@ function buildAppointments(licences, patientIds) {
   }
 
   const windows = [
-    { min: -20, max: -1  },  // past — shows as COMPLETE
-    { min:   1, max:  45 },  // near future
-    { min:  46, max:  90 },  // far future
+    { min: -45, max: -21 },  // older history — COMPLETE
+    { min: -20, max: -1  },  // recent past — COMPLETE
+    { min:   0, max:   2 },  // today / next couple days — lively stream
+    { min:   3, max:  20 },  // this month
+    { min:  21, max:  45 },  // near future
+    { min:  46, max:  75 },  // far future
+    { min:  76, max:  90 },  // ~3 months out
   ];
 
   for (const patId of patientIds) {
@@ -195,7 +199,7 @@ async function main() {
   console.log(`\n\n✅  Seeded:`);
   console.log(`   ${docs.length} doctors`);
   console.log(`   ${pats.length} patients`);
-  console.log(`   ${apts.length} appointments  (past → +3 months, 3 per patient)`);
+  console.log(`   ${apts.length} appointments  (past → +3 months, ~7 per patient)`);
 }
 
 main().catch(e => { console.error('❌', e.message); process.exit(1); });
