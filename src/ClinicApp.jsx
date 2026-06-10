@@ -35,6 +35,20 @@ function VitalsCounter({ to, delay = 0 }) {
   return <>{String(n).padStart(2, '0')}</>;
 }
 
+// ── Live clock (HH:MM:SS) ─────────────────────────────────────────────────────
+function LiveClock() {
+  const [now, setNow] = useState(() => new Date());
+  useEffect(() => {
+    const t = setInterval(() => setNow(new Date()), 1000);
+    return () => clearInterval(t);
+  }, []);
+  return (
+    <span style={{ fontVariantNumeric: 'tabular-nums' }}>
+      {now.toLocaleTimeString('he-IL', { hour12: false })}
+    </span>
+  );
+}
+
 // ── Clinic Vitals full-screen overlay ────────────────────────────────────────
 function VitalsScreen({ doctors, patients, appointments, onClose }) {
   useEffect(() => {
@@ -45,15 +59,34 @@ function VitalsScreen({ doctors, patients, appointments, onClose }) {
     return () => window.removeEventListener('keydown', h);
   }, [onClose]);
 
+  const now = new Date();
+  const todayKey = now.toISOString().slice(0, 10);
+  const todayCount = appointments.filter(a => a.dateTime.slice(0, 10) === todayKey).length;
+
+  // Next upcoming appointment → ticker
+  const nextApt = [...appointments]
+    .filter(a => new Date(a.dateTime) > now)
+    .sort((a, b) => new Date(a.dateTime) - new Date(b.dateTime))[0];
+  const nextPat = nextApt && patients.find(p => p.idNumber === nextApt.patientId);
+  const nextDoc = nextApt && doctors.find(d => d.licenseNumber === nextApt.doctorLicense);
+
   const stats = [
-    { label: 'PATIENTS',     value: patients.length,     color: '#00E5C7', glow: 'rgba(0,229,199,0.5)',     delay: 0   },
-    { label: 'APPOINTMENTS', value: appointments.length,  color: '#FF5577', glow: 'rgba(255,45,85,0.6)',      delay: 320 },
-    { label: 'DOCTORS',      value: doctors.length,       color: '#C58FFF', glow: 'rgba(197,143,255,0.5)',    delay: 640 },
+    { label: 'PATIENTS',     value: patients.length,      color: '#00E5C7', glow: 'rgba(0,229,199,0.5)',   delay: 0   },
+    { label: 'APPOINTMENTS', value: appointments.length,  color: '#FF5577', glow: 'rgba(255,45,85,0.6)',   delay: 280 },
+    { label: 'DOCTORS',      value: doctors.length,       color: '#C58FFF', glow: 'rgba(197,143,255,0.5)', delay: 560 },
+    { label: 'TODAY',        value: todayCount,           color: '#FFB454', glow: 'rgba(255,180,84,0.5)',  delay: 840 },
   ];
 
-  // ECG path — 9 reps (1080px) so the loop is seamless:
-  // viewBox is 960px; animating −120px means the path right-edge lands exactly
-  // on the viewport edge at t=100%, then snaps back with no gap.
+  // Floating ember particles
+  const particles = Array.from({ length: 22 }, (_, i) => ({
+    left: (i * 137.5) % 100,                      // golden-angle spread
+    size: 1.5 + ((i * 7) % 10) / 4,
+    dur: 9 + ((i * 13) % 11),
+    delay: -((i * 17) % 20),
+    color: ['#FF5577', '#00E5C7', '#C58FFF', '#FFB454'][i % 4],
+  }));
+
+  // Seamless ECG loop: 9 reps × 120px, animate exactly -120px
   const ekgPath = Array.from({ length: 9 }, (_, i) => {
     const o = i * 120;
     return [
@@ -70,56 +103,127 @@ function VitalsScreen({ doctors, patients, appointments, onClose }) {
       onClick={onClose}
       style={{
         position: 'fixed', inset: 0, zIndex: 300,
-        background: 'rgba(4,5,10,0.97)',
+        background: '#04050A',
         display: 'flex', flexDirection: 'column',
         alignItems: 'center', justifyContent: 'center',
-        cursor: 'pointer',
+        cursor: 'pointer', overflow: 'hidden',
         animation: 'fade-in 400ms cubic-bezier(0.22,1,0.36,1)',
       }}
     >
-      {/* Brand */}
+      {/* Dimmed aurora blobs */}
+      <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', opacity: 0.35 }}>
+        <div style={{ position: 'absolute', width: 700, height: 700, borderRadius: '50%', filter: 'blur(110px)', mixBlendMode: 'screen', background: 'radial-gradient(circle, #FF2D55 0%, transparent 70%)', top: '-220px', right: '-140px', animation: 'drift-a 24s ease-in-out infinite' }}/>
+        <div style={{ position: 'absolute', width: 600, height: 600, borderRadius: '50%', filter: 'blur(110px)', mixBlendMode: 'screen', background: 'radial-gradient(circle, #C58FFF 0%, transparent 70%)', bottom: '-200px', left: '-160px', animation: 'drift-b 30s ease-in-out infinite' }}/>
+        <div style={{ position: 'absolute', width: 480, height: 480, borderRadius: '50%', filter: 'blur(100px)', mixBlendMode: 'screen', background: 'radial-gradient(circle, #00E5C7 0%, transparent 70%)', top: '38%', left: '32%', animation: 'drift-c 28s ease-in-out infinite', opacity: 0.6 }}/>
+      </div>
+
+      {/* Floating ember particles */}
+      <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}>
+        {particles.map((p, i) => (
+          <span key={i} style={{
+            position: 'absolute', bottom: '-4px', left: p.left + '%',
+            width: p.size, height: p.size, borderRadius: '50%',
+            background: p.color, boxShadow: `0 0 ${p.size * 5}px ${p.color}`,
+            animation: `vitals-rise ${p.dur}s linear ${p.delay}s infinite`,
+          }}/>
+        ))}
+      </div>
+
+      {/* Top bar: brand + live clock */}
       <div style={{
-        fontFamily: 'var(--font-mono)', fontSize: 11, letterSpacing: '0.45em',
-        color: 'rgba(255,255,255,0.25)', textTransform: 'uppercase', marginBottom: 64,
+        position: 'absolute', top: 36, left: 0, right: 0,
+        display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 28,
         animation: 'reveal-up 700ms cubic-bezier(0.22,1,0.36,1) backwards',
       }}>
-        QFlow · Clinic Operating System · v2
+        <span style={{
+          fontFamily: 'var(--font-mono)', fontSize: 11, letterSpacing: '0.45em',
+          color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase',
+        }}>
+          QFlow · Clinic Operating System · v2
+        </span>
+        <span style={{ width: 5, height: 5, borderRadius: '50%', background: 'var(--red)', boxShadow: '0 0 10px var(--red-glow)', animation: 'blip 1.6s infinite' }}/>
+        <span style={{
+          fontFamily: 'var(--font-mono)', fontSize: 15, fontWeight: 700,
+          color: 'rgba(255,255,255,0.75)', letterSpacing: '0.12em',
+        }}>
+          <LiveClock/>
+        </span>
       </div>
 
       {/* Giant numbers */}
-      <div style={{ display: 'flex', gap: 72, alignItems: 'flex-start', direction: 'ltr' }}>
+      <div style={{ display: 'flex', gap: 'clamp(28px, 5vw, 80px)', alignItems: 'flex-start', direction: 'ltr', flexWrap: 'wrap', justifyContent: 'center', padding: '0 24px' }}>
         {stats.map(({ label, value, color, glow, delay }) => (
           <div key={label} style={{
-            textAlign: 'center',
-            animation: `reveal-up 700ms cubic-bezier(0.22,1,0.36,1) ${delay + 100}ms backwards`,
+            position: 'relative', textAlign: 'center',
+            animation: `vitals-pop 800ms cubic-bezier(0.22,1,0.36,1) ${delay + 100}ms backwards`,
           }}>
+            {/* Radial spotlight behind the number */}
             <div style={{
-              fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: '0.35em',
-              color: 'rgba(255,255,255,0.35)', marginBottom: 16, textTransform: 'uppercase',
+              position: 'absolute', left: '50%', top: '55%',
+              width: '150%', aspectRatio: '1', transform: 'translate(-50%,-50%)',
+              background: `radial-gradient(circle, ${glow} 0%, transparent 65%)`,
+              opacity: 0.35, pointerEvents: 'none', filter: 'blur(8px)',
+              animation: `vitals-spot 1.2s cubic-bezier(0.22,1,0.36,1) ${delay + 300}ms backwards`,
+            }}/>
+            <div style={{
+              position: 'relative',
+              fontFamily: 'var(--font-mono)', fontSize: 11, letterSpacing: '0.35em',
+              color: 'rgba(255,255,255,0.4)', marginBottom: 18, textTransform: 'uppercase',
             }}>
               {label}
             </div>
             <div style={{
+              position: 'relative',
               fontFamily: 'var(--font-sans)', fontWeight: 700,
-              fontSize: 'clamp(80px, 14vw, 180px)',
+              fontSize: 'clamp(72px, 11vw, 168px)',
               lineHeight: 1, letterSpacing: '-0.04em',
-              color, textShadow: `0 0 100px ${glow}, 0 0 40px ${glow}`,
+              color, textShadow: `0 0 110px ${glow}, 0 0 45px ${glow}`,
               fontVariantNumeric: 'tabular-nums',
             }}>
               <VitalsCounter to={value} delay={delay}/>
             </div>
-            {/* Thin underline in color */}
             <div style={{
-              height: 2, marginTop: 16, borderRadius: 2,
-              background: color, boxShadow: `0 0 16px ${glow}`,
-              animation: `vitals-bar 600ms cubic-bezier(0.22,1,0.36,1) ${delay + 400}ms backwards`,
+              position: 'relative', height: 2, marginTop: 18, borderRadius: 2,
+              background: `linear-gradient(90deg, transparent, ${color}, transparent)`,
+              boxShadow: `0 0 16px ${glow}`,
+              animation: `vitals-bar 600ms cubic-bezier(0.22,1,0.36,1) ${delay + 450}ms backwards`,
             }}/>
           </div>
         ))}
       </div>
 
+      {/* Next-up ticker */}
+      {nextApt && (
+        <div style={{
+          position: 'absolute', bottom: 138, left: 0, right: 0,
+          display: 'flex', justifyContent: 'center',
+          animation: 'reveal-up 700ms cubic-bezier(0.22,1,0.36,1) 1.3s backwards',
+        }}>
+          <div style={{
+            display: 'inline-flex', alignItems: 'center', gap: 14,
+            padding: '10px 26px', borderRadius: 999,
+            background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)',
+            backdropFilter: 'blur(16px)',
+          }}>
+            <span style={{ fontFamily: 'var(--font-mono)', fontSize: 9, letterSpacing: '0.3em', color: 'var(--red-bright)', textTransform: 'uppercase', fontWeight: 700 }}>
+              Next Up
+            </span>
+            <span style={{ width: 1, height: 14, background: 'rgba(255,255,255,0.15)' }}/>
+            <span style={{ fontFamily: 'var(--font-he)', fontSize: 14, fontWeight: 700, color: '#fff', direction: 'rtl' }}>
+              {nextPat?.patientName || '—'}
+            </span>
+            <span style={{ fontFamily: 'var(--font-he)', fontSize: 13, color: 'var(--fg-2)', direction: 'rtl' }}>
+              אצל {nextDoc?.doctorName || '—'}
+            </span>
+            <span style={{ fontFamily: 'var(--font-mono)', fontSize: 12, fontWeight: 700, color: 'var(--teal)', fontVariantNumeric: 'tabular-nums' }}>
+              {fmtDateTime(nextApt.dateTime)}
+            </span>
+          </div>
+        </div>
+      )}
+
       {/* EKG line */}
-      <div style={{ position: 'absolute', bottom: 72, left: 0, right: 0, height: 56, overflow: 'hidden', opacity: 0.7 }}>
+      <div style={{ position: 'absolute', bottom: 64, left: 0, right: 0, height: 56, overflow: 'hidden', opacity: 0.75 }}>
         <svg viewBox="0 0 960 60" preserveAspectRatio="none" style={{ width: '100%', height: '100%' }}>
           <defs>
             <linearGradient id="vGrad" x1="0" x2="1">
@@ -143,10 +247,10 @@ function VitalsScreen({ doctors, patients, appointments, onClose }) {
 
       {/* Dismiss hint */}
       <div style={{
-        position: 'absolute', bottom: 28,
+        position: 'absolute', bottom: 24,
         fontFamily: 'var(--font-mono)', fontSize: 9, letterSpacing: '0.28em',
         color: 'rgba(255,255,255,0.15)', textTransform: 'uppercase',
-        animation: 'fade-in 1s 1.8s backwards',
+        animation: 'fade-in 1s 2s backwards',
       }}>
         CLICK OR PRESS ANY KEY TO CONTINUE
       </div>
